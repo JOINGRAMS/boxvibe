@@ -1,10 +1,9 @@
 import Nav from './components/nav'
 import Hero from './components/hero'
 import LogoBar from './components/logo-bar'
-import Problem from './components/problem'
 import Solution from './components/solution'
-import HowItWorks from './components/how-it-works'
 import Features from './components/features'
+import HowItWorks from './components/how-it-works'
 import SocialProof from './components/social-proof'
 import Pricing from './components/pricing'
 import FinalCta from './components/final-cta'
@@ -16,10 +15,9 @@ export default function LandingPage() {
       <Nav />
       <Hero />
       <LogoBar />
-      <Problem />
       <Solution />
-      <HowItWorks />
       <Features />
+      <HowItWorks />
       <SocialProof />
       <Pricing />
       <FinalCta />

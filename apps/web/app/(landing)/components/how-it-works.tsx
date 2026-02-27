@@ -26,9 +26,9 @@ export default function HowItWorks() {
     <section id="how-it-works" className="bg-slate-50 py-20 md:py-32">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">
+          <span className="inline-block rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-600">
             How it Works
-          </p>
+          </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
             From sign-up to launch in days, not months.
           </h2>
