@@ -1,0 +1,10 @@
+{
+  "name": "@boxvibe/config",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig/*": "./tsconfig/*.json",
+    "./tailwind": "./tailwind/tailwind.config.ts"
+  }
+}
