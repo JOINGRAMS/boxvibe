@@ -3,8 +3,6 @@ import Hero from './components/hero'
 import LogoBar from './components/logo-bar'
 import Solution from './components/solution'
 import Features from './components/features'
-import HowItWorks from './components/how-it-works'
-import SocialProof from './components/social-proof'
 import Pricing from './components/pricing'
 import FinalCta from './components/final-cta'
 import Footer from './components/footer'
@@ -17,8 +15,6 @@ export default function LandingPage() {
       <LogoBar />
       <Solution />
       <Features />
-      <HowItWorks />
-      <SocialProof />
       <Pricing />
       <FinalCta />
       <Footer />

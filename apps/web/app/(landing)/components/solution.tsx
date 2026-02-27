@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 const highlights = [
   'White-labeled store with your brand, domain, and colors',
   'AI-powered customer onboarding with plan recommendations',
-  'Auto-generated kitchen ops: shopping lists, packing, plating',
+  'Flexible subscription management — plans, packages, and billing',
   'GCC-native payments via Tap — AED, SAR, KWD and more',
 ]
 
@@ -44,58 +44,106 @@ export default function Solution() {
             </Button>
           </div>
 
-          {/* Right: dashboard mockup card */}
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Vendor Dashboard</p>
-              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                Live
-              </span>
+          {/* Right: real dashboard mockup */}
+          <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-xl">
+            {/* Browser chrome */}
+            <div className="flex items-center gap-2.5 border-b border-slate-100 bg-white px-4 py-3">
+              <div className="flex gap-1.5">
+                <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
+              </div>
+              <span className="text-xs text-slate-400">Dashboard Overview</span>
             </div>
 
-            {/* Stat tiles */}
-            <div className="mb-4 grid grid-cols-3 gap-3">
-              <div className="rounded-xl bg-slate-900 p-3">
-                <p className="text-[10px] text-slate-400">Subscribers</p>
-                <p className="mt-1 text-lg font-bold text-white">248</p>
-              </div>
-              <div className="rounded-xl bg-emerald-500 p-3">
-                <p className="text-[10px] text-emerald-100">Orders Today</p>
-                <p className="mt-1 text-lg font-bold text-white">312</p>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-3">
-                <p className="text-[10px] text-slate-400">Revenue AED</p>
-                <p className="mt-1 text-lg font-bold text-slate-900">42.8K</p>
-              </div>
-            </div>
-
-            {/* Order rows */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-                Recent Orders
-              </p>
-              {[
-                { name: 'Ahmed Al Rashid', plan: 'High Protein · Tier 2', status: 'Packed' },
-                { name: 'Sara Mohammad', plan: 'Keto · Tier 1', status: 'In Transit' },
-                { name: 'Khalid Ibrahim', plan: 'Balanced · Tier 3', status: 'Packed' },
-              ].map(({ name, plan, status }) => (
-                <div key={name} className="flex items-center gap-3 rounded-xl bg-white p-3">
-                  <div className="h-8 w-8 flex-shrink-0 rounded-full bg-slate-200" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-slate-900">{name}</p>
-                    <p className="text-[10px] text-slate-400">{plan}</p>
-                  </div>
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium ${
-                      status === 'Packed'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-amber-100 text-amber-700'
-                    }`}
-                  >
-                    {status}
-                  </span>
+            <div className="flex bg-stone-50">
+              {/* Sidebar */}
+              <div className="hidden w-28 flex-shrink-0 border-r border-slate-100 bg-white p-3 md:block">
+                <div className="mb-3 flex items-center gap-1.5">
+                  <div className="h-5 w-5 rounded bg-slate-900" />
+                  <span className="text-[10px] font-bold text-slate-900">BoxVibe</span>
                 </div>
-              ))}
+                {['Dashboard', 'Subscriptions', 'Customers', 'Analytics', 'Meals', 'Settings'].map(
+                  (item) => (
+                    <div
+                      key={item}
+                      className={`mb-1 rounded-lg px-2 py-1.5 text-[9px] ${
+                        item === 'Subscriptions'
+                          ? 'bg-slate-100 font-semibold text-slate-900'
+                          : 'text-slate-400'
+                      }`}
+                    >
+                      {item}
+                    </div>
+                  ),
+                )}
+              </div>
+
+              {/* Main content */}
+              <div className="flex-1 p-4">
+                <p className="text-sm font-bold text-slate-900">Subscriptions</p>
+
+                {/* 4 stat cards */}
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {[
+                    { label: 'Total Sales', value: 'AED 42.8K', change: '+35%' },
+                    { label: 'Subscribers', value: '248', change: '+12%' },
+                    { label: 'Avg. Value', value: 'AED 810', change: '+10%' },
+                    { label: 'Avg. Length', value: '3.2 wks', change: '+5%' },
+                  ].map(({ label, value, change }) => (
+                    <div key={label} className="rounded-xl bg-white p-3 shadow-sm">
+                      <p className="text-[9px] text-slate-400">{label}</p>
+                      <p className="mt-0.5 text-sm font-bold text-slate-900">{value}</p>
+                      <p className="mt-0.5 text-[8px] font-medium text-emerald-600">{change}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Area chart */}
+                <div className="mt-3 rounded-xl bg-white p-3 shadow-sm">
+                  <p className="text-[9px] font-semibold text-slate-700">Subscription trend</p>
+                  <div className="mt-2 h-14 w-full">
+                    <svg
+                      viewBox="0 0 200 56"
+                      preserveAspectRatio="none"
+                      className="h-full w-full"
+                    >
+                      <path
+                        d="M0,38 C30,30 50,18 80,22 C110,26 140,12 170,16 L200,14 L200,56 L0,56 Z"
+                        fill="#5eead4"
+                        fillOpacity="0.35"
+                      />
+                      <path
+                        d="M0,38 C30,30 50,18 80,22 C110,26 140,12 170,16 L200,14"
+                        fill="none"
+                        stroke="#14b8a6"
+                        strokeWidth="1.5"
+                      />
+                      <path
+                        d="M0,46 C30,42 50,34 80,38 C110,42 140,36 170,40 L200,38 L200,56 L0,56 Z"
+                        fill="#fca5a5"
+                        fillOpacity="0.25"
+                      />
+                      <path
+                        d="M0,46 C30,42 50,34 80,38 C110,42 140,36 170,40 L200,38"
+                        fill="none"
+                        stroke="#f87171"
+                        strokeWidth="1"
+                      />
+                    </svg>
+                  </div>
+                  <div className="mt-1 flex gap-3">
+                    <div className="flex items-center gap-1">
+                      <div className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+                      <p className="text-[8px] text-slate-400">This week</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-1.5 w-1.5 rounded-full bg-red-300" />
+                      <p className="text-[8px] text-slate-400">Last week</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

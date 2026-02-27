@@ -14,8 +14,8 @@ export default function Hero() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate-500">
-            White-labeled stores, AI-powered onboarding, and automated kitchen
-            operations — built for GCC meal subscription businesses.
+            White-labeled stores, AI-powered onboarding, and automated operations — built for GCC
+            meal subscription businesses.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -30,7 +30,7 @@ export default function Hero() {
               variant="outline"
               className="h-12 rounded-full border-slate-300 px-8 text-base text-slate-700 hover:bg-slate-50"
             >
-              <Link href="#how-it-works">See How It Works</Link>
+              <Link href="#features">See Features</Link>
             </Button>
           </div>
         </div>
@@ -40,80 +40,144 @@ export default function Hero() {
           {/* Warm arc behind phone */}
           <div className="absolute bottom-0 left-1/2 h-[440px] w-[560px] -translate-x-1/2 rounded-t-full bg-amber-50" />
 
-          {/* Phone mockup */}
+          {/* Phone mockup — customer app */}
           <div className="absolute left-1/2 top-0 z-10 h-[575px] w-[272px] -translate-x-1/2 overflow-hidden rounded-[44px] border-[8px] border-slate-900 bg-white shadow-2xl">
             {/* Dynamic island */}
             <div className="flex justify-center pt-3">
               <div className="h-5 w-24 rounded-full bg-slate-900" />
             </div>
 
-            {/* Store UI */}
-            <div className="mt-3 px-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] text-slate-400">Good morning</p>
-                  <p className="text-sm font-bold text-slate-900">GRAMS Store</p>
-                </div>
-                <div className="h-7 w-7 rounded-full bg-slate-900" />
-              </div>
-
-              {/* Plan card */}
-              <div className="mt-3 rounded-2xl bg-slate-900 p-3">
-                <p className="text-[10px] text-slate-400">Your Plan</p>
-                <p className="text-sm font-bold text-white">High Protein · Tier 2</p>
-                <p className="mt-0.5 text-[10px] text-slate-400">Lunch + Dinner</p>
-                <div className="mt-2 flex gap-1">
-                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white">
-                    2,200 kcal
-                  </span>
-                  <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-400">
-                    Active
-                  </span>
-                </div>
-              </div>
-
-              {/* Today's menu */}
-              <p className="mt-3 text-xs font-semibold text-slate-900">Today&apos;s Menu</p>
-              <div className="mt-2 space-y-2">
-                {[
-                  { meal: 'Grilled Chicken Bowl', cal: '680 kcal', type: 'Lunch' },
-                  { meal: 'Salmon & Quinoa', cal: '720 kcal', type: 'Dinner' },
-                ].map(({ meal, cal, type }) => (
-                  <div key={type} className="flex items-center gap-2 rounded-xl bg-slate-50 p-2">
-                    <div className="h-8 w-8 flex-shrink-0 rounded-lg bg-slate-200" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[10px] font-semibold text-slate-900">{meal}</p>
-                      <p className="text-[10px] text-slate-400">
-                        {type} · {cal}
-                      </p>
-                    </div>
-                    <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    </div>
+            {/* Date picker strip */}
+            <div className="mt-3 flex items-center justify-center gap-1 px-3">
+              {[
+                { label: '14', sub: 'Oct' },
+                { label: '15', sub: 'Oct' },
+                { label: 'Today', sub: '' },
+                { label: '17', sub: 'Oct' },
+                { label: '18', sub: 'Oct' },
+              ].map(({ label, sub }) => {
+                const isToday = label === 'Today'
+                return (
+                  <div
+                    key={label}
+                    className={`flex flex-col items-center rounded-xl px-2 py-1.5 ${isToday ? 'bg-orange-500' : ''}`}
+                  >
+                    <span
+                      className={`text-[10px] font-bold ${isToday ? 'text-white' : 'text-slate-600'}`}
+                    >
+                      {label}
+                    </span>
+                    {sub && (
+                      <span className={`text-[8px] ${isToday ? 'text-orange-200' : 'text-slate-400'}`}>
+                        {sub}
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
+                )
+              })}
+            </div>
 
-              {/* Delivery status */}
-              <div className="mt-3 flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2">
-                <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
-                  <div className="h-2 w-2 rounded-full bg-amber-500" />
+            {/* Nutritional Summary */}
+            <div className="mx-3 mt-3 rounded-2xl border border-slate-100 p-3">
+              <p className="text-[11px] font-bold text-slate-900">Nutritional Summary</p>
+              <div className="mt-2 flex items-center justify-between">
+                <div className="text-center">
+                  <p className="text-[8px] text-slate-400">Planned</p>
+                  <p className="text-xs font-bold text-slate-900">1830</p>
+                  <p className="text-[8px] text-slate-400">Daily</p>
                 </div>
-                <div>
-                  <p className="text-[10px] font-semibold text-slate-900">Delivery Today</p>
-                  <p className="text-[10px] text-slate-400">Arriving 7–9 AM</p>
+                {/* SVG ring */}
+                <svg viewBox="0 0 44 44" width="54" height="54">
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="#fce7f3" strokeWidth="4" />
+                  <circle
+                    cx="22"
+                    cy="22"
+                    r="18"
+                    fill="none"
+                    stroke="#1e293b"
+                    strokeWidth="4"
+                    strokeDasharray="50 113"
+                    strokeLinecap="round"
+                    transform="rotate(-90 22 22)"
+                  />
+                  <text x="22" y="20" textAnchor="middle" fontSize="6" fontWeight="700" fill="#1e293b">
+                    1020
+                  </text>
+                  <text x="22" y="27" textAnchor="middle" fontSize="4.5" fill="#94a3b8">
+                    Cal Left
+                  </text>
+                </svg>
+                <div className="text-center">
+                  <p className="text-[8px] text-slate-400">Consumed</p>
+                  <p className="text-xs font-bold text-slate-900">1030</p>
+                  <p className="text-[8px] text-slate-400">Add</p>
                 </div>
               </div>
+              {/* Macros */}
+              <div className="mt-2 flex gap-1">
+                <div className="flex-1 rounded-lg bg-green-100 px-1 py-1 text-center">
+                  <p className="text-[7px] text-slate-500">Protein</p>
+                  <p className="text-[9px] font-bold text-slate-900">185g</p>
+                </div>
+                <div className="flex-1 rounded-lg bg-yellow-100 px-1 py-1 text-center">
+                  <p className="text-[7px] text-slate-500">Carbs</p>
+                  <p className="text-[9px] font-bold text-slate-900">139g</p>
+                </div>
+                <div className="flex-1 rounded-lg bg-red-100 px-1 py-1 text-center">
+                  <p className="text-[7px] text-slate-500">Fat</p>
+                  <p className="text-[9px] font-bold text-slate-900">62g</p>
+                </div>
+              </div>
+            </div>
 
-              {/* Subscriber count bar */}
-              <div className="mt-3 space-y-1.5">
-                <div className="flex justify-between">
-                  <p className="text-[10px] text-slate-400">Packing Progress</p>
-                  <p className="text-[10px] font-medium text-slate-700">86%</p>
+            {/* Quick Actions */}
+            <div className="mx-3 mt-3 rounded-2xl bg-orange-50 p-3">
+              <p className="text-[11px] font-bold text-slate-900">Quick Actions</p>
+              <div className="mt-2 flex gap-2">
+                <div className="flex-1 rounded-xl bg-white py-2 text-center text-[10px] font-semibold text-slate-700 shadow-sm">
+                  🚚 Delivery
                 </div>
-                <div className="h-1.5 w-full rounded-full bg-slate-100">
-                  <div className="h-1.5 w-[86%] rounded-full bg-emerald-500" />
+                <div className="flex-1 rounded-xl bg-white py-2 text-center text-[10px] font-semibold text-slate-400 shadow-sm">
+                  ↺ Skip day
                 </div>
+              </div>
+            </div>
+
+            {/* Meals of the day */}
+            <div className="mx-3 mt-3">
+              <p className="text-[11px] font-bold text-slate-900">Meals of the day</p>
+              <p className="mt-1 text-[9px] font-semibold text-slate-400">Lunch</p>
+              <div className="mt-1 flex items-center gap-2 rounded-xl bg-slate-50 p-2">
+                <div className="h-9 w-9 flex-shrink-0 rounded-lg bg-slate-200" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[10px] font-semibold text-slate-900">
+                    Grilled Chicken Salad
+                  </p>
+                  <div className="mt-0.5 flex gap-1">
+                    <span className="rounded bg-green-100 px-1 py-0.5 text-[7px] text-slate-600">
+                      Protein 185g
+                    </span>
+                    <span className="rounded bg-yellow-100 px-1 py-0.5 text-[7px] text-slate-600">
+                      Carbs 139g
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom tab bar */}
+            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-around border-t border-slate-100 bg-white px-4 py-2">
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="h-4 w-4 rounded-sm bg-orange-500" />
+                <p className="text-[7px] font-semibold text-orange-500">Home</p>
+              </div>
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="h-4 w-4 rounded-sm bg-slate-200" />
+                <p className="text-[7px] text-slate-400">Body Scan</p>
+              </div>
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="h-4 w-4 rounded-full bg-slate-200" />
+                <p className="text-[7px] text-slate-400">Profile</p>
               </div>
             </div>
           </div>

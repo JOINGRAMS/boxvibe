@@ -1,85 +1,126 @@
-import { CheckCircle2 } from 'lucide-react'
-
 export default function Features() {
   return (
     <section id="features" className="bg-slate-50 py-20 md:py-32">
       <div className="mx-auto max-w-7xl space-y-24 px-4 md:px-6 md:space-y-32 lg:px-8">
-        {/* Feature 1: Kitchen ops — left mockup, right text */}
+        {/* Feature 1: Subscription management — left mockup, right text */}
         <div className="grid gap-16 md:grid-cols-2 md:items-center">
-          {/* Left: Kitchen ops card */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Kitchen Operations</p>
-              <span className="text-xs text-slate-400">Today · 312 orders</span>
+          {/* Left: New Subscription form mockup */}
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+            <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3">
+              <span className="text-xs text-slate-400">←</span>
+              <p className="text-xs font-semibold text-slate-900">New Subscription</p>
             </div>
-
-            {/* Shopping list */}
-            <div className="mb-4 rounded-xl bg-slate-50 p-4">
-              <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-                Auto-Generated Shopping List
-              </p>
-              <div className="space-y-2.5">
-                {[
-                  { item: 'Chicken Breast', qty: '47.2 kg', done: true },
-                  { item: 'Salmon Fillet', qty: '23.8 kg', done: true },
-                  { item: 'Quinoa', qty: '18.5 kg', done: false },
-                  { item: 'Broccoli', qty: '31.0 kg', done: false },
-                ].map(({ item, qty, done }) => (
-                  <div key={item} className="flex items-center gap-2.5">
-                    <div
-                      className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full ${
-                        done ? 'bg-emerald-500' : 'border border-slate-300 bg-white'
+            <div className="p-5">
+              {/* Plan */}
+              <div className="mb-4">
+                <p className="mb-2 text-xs font-semibold text-slate-900">Plan</p>
+                <div className="flex flex-wrap gap-2">
+                  {['High Protein', 'Low Carb', 'Balanced', 'Vegetarian'].map((p, i) => (
+                    <span
+                      key={p}
+                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                        i === 0
+                          ? 'bg-slate-900 text-white'
+                          : 'border border-slate-200 text-slate-600'
                       }`}
                     >
-                      {done && <CheckCircle2 className="h-3 w-3 text-white" />}
-                    </div>
-                    <span
-                      className={`flex-1 text-xs ${done ? 'text-slate-400 line-through' : 'text-slate-700'}`}
-                    >
-                      {item}
+                      {p}
                     </span>
-                    <span className="text-xs font-medium text-slate-500">{qty}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {/* Packing progress */}
-            <div className="mb-1 flex justify-between text-xs">
-              <span className="text-slate-500">Packing Progress</span>
-              <span className="font-medium text-slate-700">86% · 268 / 312</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-slate-100">
-              <div className="h-2 w-[86%] rounded-full bg-emerald-500" />
+              {/* Package */}
+              <div className="mb-4">
+                <p className="mb-2 text-xs font-semibold text-slate-900">Package</p>
+                <div className="flex flex-wrap gap-2">
+                  {['Full day', 'B & Lunch', 'Lunch', 'Dinner'].map((p, i) => (
+                    <span
+                      key={p}
+                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                        i === 0
+                          ? 'bg-slate-900 text-white'
+                          : 'border border-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {/* Calories */}
+              <div className="mb-4">
+                <p className="mb-2 text-xs font-semibold text-slate-900">Calories</p>
+                <div className="flex flex-wrap gap-2">
+                  {['600–800', '800–1000', '1000–1200', '1200–1400'].map((p, i) => (
+                    <span
+                      key={p}
+                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                        i === 0
+                          ? 'bg-slate-900 text-white'
+                          : 'border border-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {/* Duration */}
+              <div className="mb-5">
+                <p className="mb-2 text-xs font-semibold text-slate-900">Duration</p>
+                <div className="flex flex-wrap gap-2">
+                  {['1 Week', '2 Weeks', '3 Weeks', '4 Weeks'].map((p, i) => (
+                    <span
+                      key={p}
+                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                        i === 0
+                          ? 'bg-slate-900 text-white'
+                          : 'border border-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {/* Subtotal */}
+              <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                <p className="text-xs text-slate-500">Subscription subtotal</p>
+                <p className="text-sm font-bold text-slate-900">AED 490.00</p>
+              </div>
+              <div className="mt-3 rounded-xl bg-slate-900 py-2.5 text-center text-xs font-semibold text-white">
+                Confirm details
+              </div>
             </div>
           </div>
 
           {/* Right: Text */}
           <div>
             <span className="inline-block rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-600">
-              Kitchen Operations
+              Subscription Management
             </span>
             <h2 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">
-              Auto-generate every kitchen task, every day.
+              Create and manage subscriptions in minutes.
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-slate-500">
-              BoxVibe calculates your shopping list, cooking quantities, plating instructions, and
-              packing checklists automatically — based on who ordered what, at what portion size.
+              Set up any plan configuration — diet type, calorie tier, meal package, and delivery
+              schedule — in just a few clicks. BoxVibe handles the pricing, scheduling, and
+              customer management automatically.
             </p>
             <div className="mt-8 grid grid-cols-2 gap-4">
               <div className="rounded-xl border border-slate-200 bg-white p-5">
-                <p className="text-3xl font-bold text-slate-900">0</p>
-                <p className="mt-1 text-sm text-slate-500">Hours of manual entry</p>
+                <p className="text-3xl font-bold text-slate-900">2 min</p>
+                <p className="mt-1 text-sm text-slate-500">To configure any subscription</p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-5">
-                <p className="text-3xl font-bold text-slate-900">2 min</p>
-                <p className="mt-1 text-sm text-slate-500">To generate full kitchen report</p>
+                <p className="text-3xl font-bold text-slate-900">∞</p>
+                <p className="mt-1 text-sm text-slate-500">Unlimited subscriptions & customers</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Feature 2: Customer store — left text, right phone */}
+        {/* Feature 2: Customer app — left text, right phone */}
         <div className="grid gap-16 md:grid-cols-2 md:items-center">
           {/* Left: Text */}
           <div>
@@ -87,7 +128,7 @@ export default function Features() {
               Customer Experience
             </span>
             <h2 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">
-              A white-labeled store your customers will love.
+              A white-labeled app your customers will love.
             </h2>
             <p className="mt-4 text-lg leading-relaxed text-slate-500">
               Your brand. Your domain. Your colors. Customers never see the BoxVibe name. AI
