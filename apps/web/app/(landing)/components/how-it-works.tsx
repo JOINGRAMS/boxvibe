@@ -26,7 +26,7 @@ export default function HowItWorks() {
     <section id="how-it-works" className="bg-slate-50 py-20 md:py-32">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-indigo-600">
+          <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">
             How it Works
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -39,7 +39,7 @@ export default function HowItWorks() {
             <div key={number} className="relative flex flex-col gap-4">
               {/* Large decorative number */}
               <span className="text-7xl font-bold leading-none text-slate-100">{number}</span>
-              <div className="-mt-6 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600">
+              <div className="-mt-6 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900">
                 <Icon className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-slate-900">{title}</h3>

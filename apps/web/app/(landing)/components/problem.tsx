@@ -23,7 +23,7 @@ export default function Problem() {
     <section className="bg-slate-50 py-20 md:py-32">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-indigo-600">
+          <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">
             The Problem
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -42,8 +42,8 @@ export default function Problem() {
               key={title}
               className="rounded-2xl border border-slate-200 bg-white p-8"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50">
-                <Icon className="h-6 w-6 text-indigo-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+                <Icon className="h-6 w-6 text-slate-400" />
               </div>
               <h3 className="mt-5 text-lg font-semibold text-slate-900">{title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-500">{body}</p>

@@ -44,7 +44,7 @@ export default function DemoForm({ variant = 'hero' }: DemoFormProps) {
         </div>
         <p className="text-sm text-slate-500">
           In the meantime, feel free to email us at{' '}
-          <a href="mailto:hello@boxvibe.com" className="text-indigo-600 hover:underline">
+          <a href="mailto:hello@boxvibe.com" className="text-slate-900 underline hover:text-slate-600">
             hello@boxvibe.com
           </a>
         </p>
@@ -68,13 +68,13 @@ export default function DemoForm({ variant = 'hero' }: DemoFormProps) {
             setEmail(e.target.value)
             setError('')
           }}
-          className="h-11 flex-1 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500"
+          className="h-11 flex-1 border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-slate-900"
           required
         />
         <Button
           type="submit"
           disabled={loading}
-          className="h-11 whitespace-nowrap bg-indigo-600 px-6 text-white hover:bg-indigo-700 disabled:opacity-70"
+          className="h-11 rounded-full whitespace-nowrap bg-slate-900 px-6 text-white hover:bg-slate-700 disabled:opacity-70"
         >
           {loading ? 'Sending...' : 'Book a Demo'}
         </Button>

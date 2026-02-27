@@ -1,5 +1,6 @@
 import Nav from './components/nav'
 import Hero from './components/hero'
+import LogoBar from './components/logo-bar'
 import Problem from './components/problem'
 import Solution from './components/solution'
 import HowItWorks from './components/how-it-works'
@@ -14,6 +15,7 @@ export default function LandingPage() {
     <main className="min-h-screen bg-white">
       <Nav />
       <Hero />
+      <LogoBar />
       <Problem />
       <Solution />
       <HowItWorks />

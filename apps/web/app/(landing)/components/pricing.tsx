@@ -17,7 +17,7 @@ export default function Pricing() {
     <section id="pricing" className="bg-white py-20 md:py-32">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-indigo-600">
+          <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">
             Pricing
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -40,8 +40,8 @@ export default function Pricing() {
           <ul className="mt-8 space-y-3">
             {included.map((item) => (
               <li key={item} className="flex items-center gap-3">
-                <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100">
-                  <Check className="h-3 w-3 text-indigo-600" />
+                <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-slate-900">
+                  <Check className="h-3 w-3 text-white" />
                 </div>
                 <span className="text-sm text-slate-700">{item}</span>
               </li>
@@ -50,7 +50,7 @@ export default function Pricing() {
 
           <Button
             asChild
-            className="mt-8 w-full bg-indigo-600 text-white hover:bg-indigo-700"
+            className="mt-8 w-full rounded-full bg-slate-900 text-white hover:bg-slate-700"
           >
             <Link href="#contact">Book a Demo to Learn More</Link>
           </Button>
