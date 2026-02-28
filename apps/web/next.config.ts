@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
         hostname: '*.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        // Legacy GRAMS images and any other external CDN
+        protocol: 'https',
+        hostname: '**',
+      },
     ],
   },
 }
