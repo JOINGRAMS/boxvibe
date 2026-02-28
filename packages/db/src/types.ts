@@ -121,26 +121,26 @@ export type Database = {
           },
         ]
       }
-      available_package_addons: {
+      available_plan_addons: {
         Row: {
           addon_id: string | null
           created_at: string
           id: string
-          package_id: string | null
+          plan_id: string | null
           updated_at: string
         }
         Insert: {
           addon_id?: string | null
           created_at?: string
           id?: string
-          package_id?: string | null
+          plan_id?: string | null
           updated_at: string
         }
         Update: {
           addon_id?: string | null
           created_at?: string
           id?: string
-          package_id?: string | null
+          plan_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -153,9 +153,9 @@ export type Database = {
           },
           {
             foreignKeyName: "available_package_addons_package_id_packages_id_fk"
-            columns: ["package_id"]
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "packages"
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]
@@ -192,7 +192,6 @@ export type Database = {
           account_id: string | null
           activityLevel: string | null
           birthday: string | null
-          categoryId: string | null
           country: string | null
           country_code: string | null
           created_at: string | null
@@ -205,6 +204,7 @@ export type Database = {
           id: string
           mobile: string | null
           name: string | null
+          package_id: string | null
           targetWeight: string | null
           updated_at: string | null
           weight: string | null
@@ -213,7 +213,6 @@ export type Database = {
           account_id?: string | null
           activityLevel?: string | null
           birthday?: string | null
-          categoryId?: string | null
           country?: string | null
           country_code?: string | null
           created_at?: string | null
@@ -226,6 +225,7 @@ export type Database = {
           id?: string
           mobile?: string | null
           name?: string | null
+          package_id?: string | null
           targetWeight?: string | null
           updated_at?: string | null
           weight?: string | null
@@ -234,7 +234,6 @@ export type Database = {
           account_id?: string | null
           activityLevel?: string | null
           birthday?: string | null
-          categoryId?: string | null
           country?: string | null
           country_code?: string | null
           created_at?: string | null
@@ -247,6 +246,7 @@ export type Database = {
           id?: string
           mobile?: string | null
           name?: string | null
+          package_id?: string | null
           targetWeight?: string | null
           updated_at?: string | null
           weight?: string | null
@@ -254,9 +254,9 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "customers_categoryId_package_categories_id_fk"
-            columns: ["categoryId"]
+            columns: ["package_id"]
             isOneToOne: false
-            referencedRelation: "package_categories"
+            referencedRelation: "packages"
             referencedColumns: ["id"]
           },
         ]
@@ -364,26 +364,26 @@ export type Database = {
           },
         ]
       }
-      favorite_packages: {
+      favorite_plans: {
         Row: {
           account_id: string
           created_at: string
           id: string
-          package_id: string
+          plan_id: string
           updated_at: string
         }
         Insert: {
           account_id: string
           created_at?: string
           id?: string
-          package_id: string
+          plan_id: string
           updated_at: string
         }
         Update: {
           account_id?: string
           created_at?: string
           id?: string
-          package_id?: string
+          plan_id?: string
           updated_at?: string
         }
         Relationships: []
@@ -957,7 +957,7 @@ export type Database = {
           is_active: boolean
           item_category_id: string | null
           menu_day_id: string | null
-          package_category_id: string | null
+          package_id: string | null
           updated_at: string
         }
         Insert: {
@@ -966,7 +966,7 @@ export type Database = {
           is_active?: boolean
           item_category_id?: string | null
           menu_day_id?: string | null
-          package_category_id?: string | null
+          package_id?: string | null
           updated_at: string
         }
         Update: {
@@ -975,7 +975,7 @@ export type Database = {
           is_active?: boolean
           item_category_id?: string | null
           menu_day_id?: string | null
-          package_category_id?: string | null
+          package_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -995,9 +995,9 @@ export type Database = {
           },
           {
             foreignKeyName: "menu_day_item_categories_package_category_id_package_categories"
-            columns: ["package_category_id"]
+            columns: ["package_id"]
             isOneToOne: false
-            referencedRelation: "package_categories"
+            referencedRelation: "packages"
             referencedColumns: ["id"]
           },
         ]
@@ -1078,7 +1078,7 @@ export type Database = {
           is_canceled: boolean
           is_delivered: boolean
           is_paid: boolean
-          package_id: string
+          plan_id: string
           subscription_id: string
           updated_at: string
         }
@@ -1091,7 +1091,7 @@ export type Database = {
           is_canceled: boolean
           is_delivered: boolean
           is_paid: boolean
-          package_id: string
+          plan_id: string
           subscription_id: string
           updated_at: string
         }
@@ -1104,13 +1104,13 @@ export type Database = {
           is_canceled?: boolean
           is_delivered?: boolean
           is_paid?: boolean
-          package_id?: string
+          plan_id?: string
           subscription_id?: string
           updated_at?: string
         }
         Relationships: []
       }
-      package_categories: {
+      packages: {
         Row: {
           category: string
           category_ar: string
@@ -1168,213 +1168,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      package_items: {
-        Row: {
-          created_at: string
-          id: string
-          item_id: string | null
-          item_index: number
-          package_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          item_id?: string | null
-          item_index: number
-          package_id?: string | null
-          updated_at: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          item_id?: string | null
-          item_index?: number
-          package_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "package_items_item_id_item_categories_id_fk"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "item_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "package_items_package_id_packages_id_fk"
-            columns: ["package_id"]
-            isOneToOne: false
-            referencedRelation: "packages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      package_package_categories: {
-        Row: {
-          category_id: string | null
-          created_at: string
-          id: string
-          package_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          category_id?: string | null
-          created_at?: string
-          id?: string
-          package_id?: string | null
-          updated_at: string
-        }
-        Update: {
-          category_id?: string | null
-          created_at?: string
-          id?: string
-          package_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "package_package_categories_category_id_package_categories_id_fk"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "package_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "package_package_categories_package_id_packages_id_fk"
-            columns: ["package_id"]
-            isOneToOne: false
-            referencedRelation: "packages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      package_variance: {
-        Row: {
-          created_at: string
-          id: string
-          package_id: string | null
-          total_price: number
-          updated_at: string
-          variance_name_ar: string
-          variance_name_en: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          package_id?: string | null
-          total_price: number
-          updated_at: string
-          variance_name_ar: string
-          variance_name_en: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          package_id?: string | null
-          total_price?: number
-          updated_at?: string
-          variance_name_ar?: string
-          variance_name_en?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "package_variance_package_id_packages_id_fk"
-            columns: ["package_id"]
-            isOneToOne: false
-            referencedRelation: "packages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      package_variance_item_categories: {
-        Row: {
-          created_at: string
-          id: string
-          item_category_id: string | null
-          package_variance_id: string | null
-          portion_size: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          item_category_id?: string | null
-          package_variance_id?: string | null
-          portion_size?: string | null
-          updated_at: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          item_category_id?: string | null
-          package_variance_id?: string | null
-          portion_size?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "package_variance_item_categories_item_category_id_package_items"
-            columns: ["item_category_id"]
-            isOneToOne: false
-            referencedRelation: "package_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "package_variance_item_categories_package_variance_id_package_va"
-            columns: ["package_variance_id"]
-            isOneToOne: false
-            referencedRelation: "package_variance"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "package_variance_item_categories_portion_size_meal_portions_id_"
-            columns: ["portion_size"]
-            isOneToOne: false
-            referencedRelation: "meal_portions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      packages: {
-        Row: {
-          cover_image: string | null
-          created_at: string
-          desc_ar: string | null
-          desc_en: string | null
-          id: string
-          is_active: boolean
-          name_ar: string
-          name_en: string
-          updated_at: string
-          vendor_id: string
-        }
-        Insert: {
-          cover_image?: string | null
-          created_at?: string
-          desc_ar?: string | null
-          desc_en?: string | null
-          id?: string
-          is_active?: boolean
-          name_ar: string
-          name_en: string
-          updated_at: string
-          vendor_id: string
-        }
-        Update: {
-          cover_image?: string | null
-          created_at?: string
-          desc_ar?: string | null
-          desc_en?: string | null
-          id?: string
-          is_active?: boolean
-          name_ar?: string
-          name_en?: string
-          updated_at?: string
-          vendor_id?: string
-        }
-        Relationships: []
       }
       payments: {
         Row: {
@@ -1436,6 +1229,213 @@ export type Database = {
           },
         ]
       }
+      plan_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string | null
+          item_index: number
+          plan_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          item_index: number
+          plan_id?: string | null
+          updated_at: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          item_index?: number
+          plan_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_items_item_id_item_categories_id_fk"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "item_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_items_package_id_packages_id_fk"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_packages: {
+        Row: {
+          created_at: string
+          id: string
+          package_id: string | null
+          plan_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          package_id?: string | null
+          plan_id?: string | null
+          updated_at: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          package_id?: string | null
+          plan_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_package_categories_category_id_package_categories_id_fk"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_package_categories_package_id_packages_id_fk"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_variance: {
+        Row: {
+          created_at: string
+          id: string
+          plan_id: string | null
+          total_price: number
+          updated_at: string
+          variance_name_ar: string
+          variance_name_en: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan_id?: string | null
+          total_price: number
+          updated_at: string
+          variance_name_ar: string
+          variance_name_en: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan_id?: string | null
+          total_price?: number
+          updated_at?: string
+          variance_name_ar?: string
+          variance_name_en?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_variance_package_id_packages_id_fk"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_variance_item_categories: {
+        Row: {
+          created_at: string
+          id: string
+          item_category_id: string | null
+          package_variance_id: string | null
+          portion_size: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_category_id?: string | null
+          package_variance_id?: string | null
+          portion_size?: string | null
+          updated_at: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_category_id?: string | null
+          package_variance_id?: string | null
+          portion_size?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_variance_item_categories_item_category_id_package_items"
+            columns: ["item_category_id"]
+            isOneToOne: false
+            referencedRelation: "plan_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_variance_item_categories_package_variance_id_package_va"
+            columns: ["package_variance_id"]
+            isOneToOne: false
+            referencedRelation: "plan_variance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_variance_item_categories_portion_size_meal_portions_id_"
+            columns: ["portion_size"]
+            isOneToOne: false
+            referencedRelation: "meal_portions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          cover_image: string | null
+          created_at: string
+          desc_ar: string | null
+          desc_en: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          cover_image?: string | null
+          created_at?: string
+          desc_ar?: string | null
+          desc_en?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          updated_at: string
+          vendor_id: string
+        }
+        Update: {
+          cover_image?: string | null
+          created_at?: string
+          desc_ar?: string | null
+          desc_en?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: []
+      }
       portions: {
         Row: {
           calories: number
@@ -1477,35 +1477,35 @@ export type Database = {
           },
         ]
       }
-      selected_package_categories: {
+      selected_packages: {
         Row: {
-          category_id: string | null
           id: string
           package_id: string | null
+          plan_id: string | null
         }
         Insert: {
-          category_id?: string | null
           id?: string
           package_id?: string | null
+          plan_id?: string | null
         }
         Update: {
-          category_id?: string | null
           id?: string
           package_id?: string | null
+          plan_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "selected_package_categories_category_id_package_categories_id_f"
-            columns: ["category_id"]
+            columns: ["package_id"]
             isOneToOne: false
-            referencedRelation: "package_categories"
+            referencedRelation: "packages"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "selected_package_categories_package_id_packages_id_fk"
-            columns: ["package_id"]
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "packages"
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]
@@ -1722,10 +1722,10 @@ export type Database = {
           id: string
           note: string | null
           number_of_days: number
-          package_id: string
-          package_variant_id: string | null
           paid_at: string | null
           paused_at: string | null
+          plan_id: string
+          plan_variant_id: string | null
           resumed_at: string | null
           start_date: string
           status: string
@@ -1751,10 +1751,10 @@ export type Database = {
           id?: string
           note?: string | null
           number_of_days: number
-          package_id: string
-          package_variant_id?: string | null
           paid_at?: string | null
           paused_at?: string | null
+          plan_id: string
+          plan_variant_id?: string | null
           resumed_at?: string | null
           start_date: string
           status?: string
@@ -1780,10 +1780,10 @@ export type Database = {
           id?: string
           note?: string | null
           number_of_days?: number
-          package_id?: string
-          package_variant_id?: string | null
           paid_at?: string | null
           paused_at?: string | null
+          plan_id?: string
+          plan_variant_id?: string | null
           resumed_at?: string | null
           start_date?: string
           status?: string
@@ -1799,7 +1799,7 @@ export type Database = {
             foreignKeyName: "subscriptions_category_id_package_categories_id_fk"
             columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: "package_categories"
+            referencedRelation: "packages"
             referencedColumns: ["id"]
           },
           {
@@ -1818,16 +1818,16 @@ export type Database = {
           },
           {
             foreignKeyName: "subscriptions_package_id_packages_id_fk"
-            columns: ["package_id"]
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "packages"
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "subscriptions_package_variant_id_package_variance_id_fk"
-            columns: ["package_variant_id"]
+            columns: ["plan_variant_id"]
             isOneToOne: false
-            referencedRelation: "package_variance"
+            referencedRelation: "plan_variance"
             referencedColumns: ["id"]
           },
           {
@@ -2350,8 +2350,8 @@ export type Database = {
           id: string
           is_active: boolean
           number_of_days: number
-          package_id: string
           paused_at: string | null
+          plan_id: string
           resumed_at: string | null
           start_date: string
           updated_at: string
@@ -2362,8 +2362,8 @@ export type Database = {
           id?: string
           is_active: boolean
           number_of_days: number
-          package_id: string
           paused_at?: string | null
+          plan_id: string
           resumed_at?: string | null
           start_date: string
           updated_at: string
@@ -2374,8 +2374,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           number_of_days?: number
-          package_id?: string
           paused_at?: string | null
+          plan_id?: string
           resumed_at?: string | null
           start_date?: string
           updated_at?: string
