@@ -1277,6 +1277,7 @@ export type Database = {
           is_active: boolean
           is_custom: boolean
           price_multiplier: number
+          slug: string | null
           updated_at: string
           vendor_id: string | null
         }
@@ -1293,6 +1294,7 @@ export type Database = {
           is_active?: boolean
           is_custom?: boolean
           price_multiplier?: number
+          slug?: string | null
           updated_at: string
           vendor_id?: string | null
         }
@@ -1309,6 +1311,7 @@ export type Database = {
           is_active?: boolean
           is_custom?: boolean
           price_multiplier?: number
+          slug?: string | null
           updated_at?: string
           vendor_id?: string | null
         }
@@ -1560,6 +1563,7 @@ export type Database = {
           is_active: boolean
           name_ar: string
           name_en: string
+          slug: string | null
           updated_at: string
           vendor_id: string
         }
@@ -1572,6 +1576,7 @@ export type Database = {
           is_active?: boolean
           name_ar: string
           name_en: string
+          slug?: string | null
           updated_at: string
           vendor_id: string
         }
@@ -1584,6 +1589,7 @@ export type Database = {
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          slug?: string | null
           updated_at?: string
           vendor_id?: string
         }
@@ -2661,6 +2667,7 @@ export type Database = {
           name_ar: string
           name_en: string
           owner_id: string
+          slug: string | null
           subscribed_at: string | null
           updated_at: string
           vendor_subscription_id: string | null
@@ -2685,6 +2692,7 @@ export type Database = {
           name_ar: string
           name_en: string
           owner_id: string
+          slug?: string | null
           subscribed_at?: string | null
           updated_at: string
           vendor_subscription_id?: string | null
@@ -2709,6 +2717,7 @@ export type Database = {
           name_ar?: string
           name_en?: string
           owner_id?: string
+          slug?: string | null
           subscribed_at?: string | null
           updated_at?: string
           vendor_subscription_id?: string | null
