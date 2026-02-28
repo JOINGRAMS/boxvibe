@@ -48,7 +48,7 @@ export default async function StoreLayout({ children, params }: StoreLayoutProps
               Plans
             </Link>
             <Link
-              href={`${storeHref}/plans`}
+              href={`${storeHref}/subscribe`}
               className="rounded-full bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
             >
               Get Started

@@ -14,6 +14,8 @@ export {
   getPackagesForPlan,
   getPackageBySlug,
   getTiersForPlan,
+  getPackagesForVendor,
+  getAllTiersForVendor,
 } from './queries/storefront'
 
 export type {

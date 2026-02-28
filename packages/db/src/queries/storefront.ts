@@ -126,3 +126,40 @@ export const getTiersForPlan = cache(async (planId: string): Promise<StorefrontT
     .order('total_price')
   return data ?? []
 })
+
+// ─── Wizard queries (vendor-scoped, for the subscribe wizard) ─────────────────
+
+/** All active packages belonging to a vendor (for the subscription wizard step 1). */
+export const getPackagesForVendor = cache(async (vendorId: string): Promise<StorefrontPackage[]> => {
+  const supabase = createSupabaseAdminClient()
+  const { data } = await supabase
+    .from('packages')
+    .select('id, category_en, category_ar, description_en, description_ar, cover_image_url, price_multiplier, slug')
+    .eq('vendor_id', vendorId)
+    .eq('is_active', true)
+    .order('price_multiplier')
+  return data ?? []
+})
+
+/** All calorie tiers across all active plans for a vendor (for the subscription wizard step 2). */
+export const getAllTiersForVendor = cache(async (vendorId: string): Promise<StorefrontTier[]> => {
+  const supabase = createSupabaseAdminClient()
+
+  // Get all active plan IDs for this vendor
+  const { data: planRows } = await supabase
+    .from('plans')
+    .select('id')
+    .eq('vendor_id', vendorId)
+    .eq('is_active', true)
+
+  if (!planRows || planRows.length === 0) return []
+  const planIds = planRows.map(p => p.id)
+
+  const { data } = await supabase
+    .from('plan_package_tiers')
+    .select('id, variance_name_en, variance_name_ar, total_price')
+    .in('plan_id', planIds)
+    .order('total_price')
+
+  return data ?? []
+})
