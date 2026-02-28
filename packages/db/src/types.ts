@@ -160,6 +160,115 @@ export type Database = {
           },
         ]
       }
+      component_ingredients: {
+        Row: {
+          component_id: string
+          cooking_loss_percent: number
+          created_at: string
+          id: string
+          ingredient_id: string
+          notes: string | null
+          quantity_raw: number
+          unit: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          component_id: string
+          cooking_loss_percent?: number
+          created_at?: string
+          id?: string
+          ingredient_id: string
+          notes?: string | null
+          quantity_raw: number
+          unit: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          component_id?: string
+          cooking_loss_percent?: number
+          created_at?: string
+          id?: string
+          ingredient_id?: string
+          notes?: string | null
+          quantity_raw?: number
+          unit?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "component_ingredients_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_ingredients_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      components: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          name_ar: string
+          name_en: string
+          notes: string | null
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          name_ar: string
+          name_en: string
+          notes?: string | null
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          name_ar?: string
+          name_en?: string
+          notes?: string | null
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "components_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "components_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_form: {
         Row: {
           created_at: string | null
@@ -434,6 +543,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "featured_vendors_vendor_id_vendors_id_fk"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ingredients: {
+        Row: {
+          cost_per_unit: number | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          unit: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          cost_per_unit?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          unit: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          cost_per_unit?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          unit?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredients_vendor_id_fkey"
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
@@ -1271,46 +1424,56 @@ export type Database = {
           },
         ]
       }
-      plan_packages: {
+      plan_package_tier_item_categories: {
         Row: {
           created_at: string
           id: string
-          package_id: string | null
-          plan_id: string | null
+          item_category_id: string | null
+          plan_package_tier_id: string | null
+          portion_size: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
-          package_id?: string | null
-          plan_id?: string | null
+          item_category_id?: string | null
+          plan_package_tier_id?: string | null
+          portion_size?: string | null
           updated_at: string
         }
         Update: {
           created_at?: string
           id?: string
-          package_id?: string | null
-          plan_id?: string | null
+          item_category_id?: string | null
+          plan_package_tier_id?: string | null
+          portion_size?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "package_package_categories_category_id_package_categories_id_fk"
-            columns: ["package_id"]
+            foreignKeyName: "package_variance_item_categories_item_category_id_package_items"
+            columns: ["item_category_id"]
             isOneToOne: false
-            referencedRelation: "packages"
+            referencedRelation: "plan_items"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "package_package_categories_package_id_packages_id_fk"
-            columns: ["plan_id"]
+            foreignKeyName: "package_variance_item_categories_package_variance_id_package_va"
+            columns: ["plan_package_tier_id"]
             isOneToOne: false
-            referencedRelation: "plans"
+            referencedRelation: "plan_package_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_variance_item_categories_portion_size_meal_portions_id_"
+            columns: ["portion_size"]
+            isOneToOne: false
+            referencedRelation: "meal_portions"
             referencedColumns: ["id"]
           },
         ]
       }
-      plan_variance: {
+      plan_package_tiers: {
         Row: {
           created_at: string
           id: string
@@ -1348,51 +1511,41 @@ export type Database = {
           },
         ]
       }
-      plan_variance_item_categories: {
+      plan_packages: {
         Row: {
           created_at: string
           id: string
-          item_category_id: string | null
-          package_variance_id: string | null
-          portion_size: string | null
+          package_id: string | null
+          plan_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
-          item_category_id?: string | null
-          package_variance_id?: string | null
-          portion_size?: string | null
+          package_id?: string | null
+          plan_id?: string | null
           updated_at: string
         }
         Update: {
           created_at?: string
           id?: string
-          item_category_id?: string | null
-          package_variance_id?: string | null
-          portion_size?: string | null
+          package_id?: string | null
+          plan_id?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "package_variance_item_categories_item_category_id_package_items"
-            columns: ["item_category_id"]
+            foreignKeyName: "package_package_categories_category_id_package_categories_id_fk"
+            columns: ["package_id"]
             isOneToOne: false
-            referencedRelation: "plan_items"
+            referencedRelation: "packages"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "package_variance_item_categories_package_variance_id_package_va"
-            columns: ["package_variance_id"]
+            foreignKeyName: "package_package_categories_package_id_packages_id_fk"
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "plan_variance"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "package_variance_item_categories_portion_size_meal_portions_id_"
-            columns: ["portion_size"]
-            isOneToOne: false
-            referencedRelation: "meal_portions"
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]
@@ -1725,7 +1878,7 @@ export type Database = {
           paid_at: string | null
           paused_at: string | null
           plan_id: string
-          plan_variant_id: string | null
+          plan_package_tier_id: string | null
           resumed_at: string | null
           start_date: string
           status: string
@@ -1754,7 +1907,7 @@ export type Database = {
           paid_at?: string | null
           paused_at?: string | null
           plan_id: string
-          plan_variant_id?: string | null
+          plan_package_tier_id?: string | null
           resumed_at?: string | null
           start_date: string
           status?: string
@@ -1783,7 +1936,7 @@ export type Database = {
           paid_at?: string | null
           paused_at?: string | null
           plan_id?: string
-          plan_variant_id?: string | null
+          plan_package_tier_id?: string | null
           resumed_at?: string | null
           start_date?: string
           status?: string
@@ -1825,9 +1978,9 @@ export type Database = {
           },
           {
             foreignKeyName: "subscriptions_package_variant_id_package_variance_id_fk"
-            columns: ["plan_variant_id"]
+            columns: ["plan_package_tier_id"]
             isOneToOne: false
-            referencedRelation: "plan_variance"
+            referencedRelation: "plan_package_tiers"
             referencedColumns: ["id"]
           },
           {
