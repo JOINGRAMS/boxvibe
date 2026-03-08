@@ -4,18 +4,17 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { StorefrontPackage, StorefrontTier, StorefrontVendor } from '@boxvibe/db'
+import type {
+  StorefrontPackage,
+  StorefrontPlan,
+  StorefrontTier,
+  StorefrontVendor,
+  PlanPackageLink,
+} from '@boxvibe/db'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const TOTAL_STEPS = 6
-
-const MEAL_TYPES = [
-  { id: 'breakfast', label: 'Breakfast', emoji: '🍳', time: '7:00 AM' },
-  { id: 'lunch', label: 'Lunch', emoji: '🥗', time: '1:00 PM' },
-  { id: 'dinner', label: 'Dinner', emoji: '🌙', time: '7:00 PM' },
-  { id: 'snacks', label: 'Snacks', emoji: '🥜', time: 'Throughout the day' },
-]
 
 const DAYS_OPTIONS = [
   { days: 5, label: '5 Days', sublabel: 'Mon – Fri' },
@@ -35,6 +34,17 @@ const MONTH_NAMES = [
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getPlanEmoji(name: string): string {
+  const n = name.toLowerCase()
+  if (n.includes('keto')) return '🥑'
+  if (n.includes('protein')) return '💪'
+  if (n.includes('balance') || n.includes('balanced')) return '⚖️'
+  if (n.includes('low carb') || n.includes('lowcarb')) return '🥦'
+  if (n.includes('vegan') || n.includes('plant')) return '🌱'
+  if (n.includes('weight') || n.includes('loss')) return '🔥'
+  return '🥗'
+}
 
 function getPackageEmoji(name: string): string {
   const n = name.toLowerCase()
@@ -56,7 +66,7 @@ function formatCurrency(amount: number, currency: string): string {
   return `${currency} ${Math.round(amount).toLocaleString('en-AE')}`
 }
 
-/** Prorate: total_price assumed to be a monthly rate (4 weeks × 5 days). */
+/** Prorate: total_price is a monthly rate (4 weeks × 5 days). */
 function computePrice(
   tier: StorefrontTier,
   pkg: StorefrontPackage,
@@ -80,9 +90,9 @@ function formatDateLong(isoDate: string): string {
 // ─── Wizard state ─────────────────────────────────────────────────────────────
 
 interface WizardState {
+  selectedPlan: StorefrontPlan | null
   selectedPackage: StorefrontPackage | null
   selectedTier: StorefrontTier | null
-  mealTypes: string[]
   daysPerWeek: number | null
   durationWeeks: number | null
   startDate: string | null
@@ -90,9 +100,9 @@ interface WizardState {
 
 function canProceed(step: number, state: WizardState): boolean {
   switch (step) {
-    case 1: return state.selectedPackage !== null
-    case 2: return state.selectedTier !== null
-    case 3: return state.mealTypes.length > 0
+    case 1: return state.selectedPlan !== null
+    case 2: return state.selectedPackage !== null
+    case 3: return state.selectedTier !== null
     case 4: return state.daysPerWeek !== null && state.durationWeeks !== null
     case 5: return state.startDate !== null
     case 6: return true
@@ -150,7 +160,58 @@ function SelectionCheckmark() {
   )
 }
 
-// ─── Step 1: Package ──────────────────────────────────────────────────────────
+// ─── Step 1: Plan ─────────────────────────────────────────────────────────────
+
+function StepPlan({
+  plans,
+  selected,
+  onSelect,
+}: {
+  plans: StorefrontPlan[]
+  selected: StorefrontPlan | null
+  onSelect: (plan: StorefrontPlan) => void
+}) {
+  if (plans.length === 0) {
+    return (
+      <>
+        <StepHeader title="Choose your plan" />
+        <p className="text-slate-400">No plans available yet — check back soon.</p>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <StepHeader
+        title="Choose your plan"
+        subtitle="Pick the dietary approach that fits your goal."
+      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        {plans.map(plan => (
+          <button
+            key={plan.id}
+            onClick={() => onSelect(plan)}
+            className={cn(
+              'group relative text-left rounded-2xl border-2 p-5 transition-all duration-200',
+              selected?.id === plan.id
+                ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
+            )}
+          >
+            {selected?.id === plan.id && <SelectionCheckmark />}
+            <div className="mb-3 text-4xl">{getPlanEmoji(plan.name_en)}</div>
+            <h3 className="mb-1 pr-8 font-semibold text-slate-900">{plan.name_en}</h3>
+            {plan.desc_en && (
+              <p className="line-clamp-2 text-sm text-slate-500">{plan.desc_en}</p>
+            )}
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+// ─── Step 2: Package ──────────────────────────────────────────────────────────
 
 function StepPackage({
   packages,
@@ -164,8 +225,8 @@ function StepPackage({
   if (packages.length === 0) {
     return (
       <>
-        <StepHeader title="What meals do you want?" />
-        <p className="text-slate-400">No packages available yet — check back soon.</p>
+        <StepHeader title="Choose your meals" />
+        <p className="text-slate-400">No packages configured for this plan yet.</p>
       </>
     )
   }
@@ -173,8 +234,8 @@ function StepPackage({
   return (
     <>
       <StepHeader
-        title="What meals do you want?"
-        subtitle="Choose a package that fits your daily routine."
+        title="Choose your meals"
+        subtitle="Which meal times would you like covered each day?"
       />
       <div className="grid gap-4 sm:grid-cols-2">
         {packages.map(pkg => (
@@ -201,7 +262,7 @@ function StepPackage({
   )
 }
 
-// ─── Step 2: Calorie tier ─────────────────────────────────────────────────────
+// ─── Step 3: Calorie tier ─────────────────────────────────────────────────────
 
 function StepTier({
   tiers,
@@ -218,7 +279,7 @@ function StepTier({
     return (
       <>
         <StepHeader title="How many calories per day?" />
-        <p className="text-slate-400">No calorie tiers configured yet.</p>
+        <p className="text-slate-400">No calorie tiers configured for this plan yet.</p>
       </>
     )
   }
@@ -262,49 +323,6 @@ function StepTier({
             </div>
           </button>
         ))}
-      </div>
-    </>
-  )
-}
-
-// ─── Step 3: Meal types ───────────────────────────────────────────────────────
-
-function StepMealTypes({
-  selected,
-  onToggle,
-}: {
-  selected: string[]
-  onToggle: (id: string) => void
-}) {
-  return (
-    <>
-      <StepHeader
-        title="Which meal types?"
-        subtitle="Select everything you'd like included each day."
-      />
-      <div className="grid gap-3 sm:grid-cols-2">
-        {MEAL_TYPES.map(meal => {
-          const isSelected = selected.includes(meal.id)
-          return (
-            <button
-              key={meal.id}
-              onClick={() => onToggle(meal.id)}
-              className={cn(
-                'relative flex items-center gap-4 rounded-2xl border-2 p-5 text-left transition-all duration-200',
-                isSelected
-                  ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                  : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
-              )}
-            >
-              {isSelected && <SelectionCheckmark />}
-              <span className="text-3xl">{meal.emoji}</span>
-              <div>
-                <p className="font-semibold text-slate-900">{meal.label}</p>
-                <p className="text-sm text-slate-400">{meal.time}</p>
-              </div>
-            </button>
-          )
-        })}
       </div>
     </>
   )
@@ -533,7 +551,7 @@ function StepStartDate({
       <CalendarPicker value={value} onChange={onChange} />
       {value && (
         <p className="mt-5 text-center text-sm font-medium text-emerald-600">
-          ✓ Starting {formatDateLong(value)}
+          Starting {formatDateLong(value)}
         </p>
       )}
     </>
@@ -560,16 +578,12 @@ function StepSummary({
   currency: string
   vendorSlug: string
 }) {
-  const { selectedPackage, selectedTier, mealTypes, daysPerWeek, durationWeeks, startDate } = state
+  const { selectedPlan, selectedPackage, selectedTier, daysPerWeek, durationWeeks, startDate } = state
 
   const price =
     selectedPackage && selectedTier && daysPerWeek && durationWeeks
       ? computePrice(selectedTier, selectedPackage, daysPerWeek, durationWeeks)
       : null
-
-  const mealLabels = mealTypes
-    .map(id => MEAL_TYPES.find(m => m.id === id)?.label ?? id)
-    .join(', ')
 
   const durationLabel =
     DURATION_OPTIONS.find(d => d.weeks === durationWeeks)?.label ?? '—'
@@ -580,9 +594,9 @@ function StepSummary({
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="divide-y divide-slate-100">
-          <SummaryRow label="Package" value={selectedPackage?.category_en ?? '—'} />
+          <SummaryRow label="Plan" value={selectedPlan?.name_en ?? '—'} />
+          <SummaryRow label="Meals" value={selectedPackage?.category_en ?? '—'} />
           <SummaryRow label="Calorie tier" value={selectedTier?.variance_name_en ?? '—'} />
-          <SummaryRow label="Meals" value={mealLabels || '—'} />
           <SummaryRow
             label="Days / week"
             value={daysPerWeek ? `${daysPerWeek} days` : '—'}
@@ -628,20 +642,29 @@ function StepSummary({
 
 interface WizardProps {
   vendor: StorefrontVendor
+  plans: StorefrontPlan[]
   packages: StorefrontPackage[]
   tiers: StorefrontTier[]
+  planPackageMap: PlanPackageLink[]
   vendorSlug: string
 }
 
-export default function SubscribeWizard({ vendor, packages, tiers, vendorSlug }: WizardProps) {
+export default function SubscribeWizard({
+  vendor,
+  plans,
+  packages,
+  tiers,
+  planPackageMap,
+  vendorSlug,
+}: WizardProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   const [step, setStep] = useState(1)
   const [state, setState] = useState<WizardState>({
+    selectedPlan: null,
     selectedPackage: null,
     selectedTier: null,
-    mealTypes: [],
     daysPerWeek: null,
     durationWeeks: null,
     startDate: null,
@@ -660,11 +683,41 @@ export default function SubscribeWizard({ vendor, packages, tiers, vendorSlug }:
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  function selectPlan(plan: StorefrontPlan) {
+    // Reset downstream selections whenever the plan changes
+    setState(s => ({
+      ...s,
+      selectedPlan: plan,
+      selectedPackage: null,
+      selectedTier: null,
+    }))
+  }
+
+  function selectPackage(pkg: StorefrontPackage) {
+    // Reset tier whenever the package changes
+    setState(s => ({ ...s, selectedPackage: pkg, selectedTier: null }))
+  }
+
+  // Derive packages available for the selected plan
+  const availablePackageIds = state.selectedPlan
+    ? new Set(
+        planPackageMap
+          .filter(r => r.plan_id === state.selectedPlan!.id)
+          .map(r => r.package_id),
+      )
+    : new Set<string>()
+
+  const filteredPackages = packages.filter(p => availablePackageIds.has(p.id))
+
+  // Derive tiers for the selected plan
+  const filteredTiers = state.selectedPlan
+    ? tiers.filter(t => t.plan_id === state.selectedPlan!.id)
+    : []
+
   const ready = canProceed(step, state)
   const isLastStep = step === TOTAL_STEPS
 
   return (
-    /* Extra bottom padding on mobile to clear the sticky footer */
     <div className="pb-32 md:pb-16">
       <div className="mx-auto max-w-2xl px-4 py-8 md:px-6 md:py-12">
         <ProgressBar step={step} />
@@ -672,33 +725,27 @@ export default function SubscribeWizard({ vendor, packages, tiers, vendorSlug }:
         {/* Animated step content — key forces re-mount on step change */}
         <div key={step} className="animate-step-in">
           {step === 1 && (
-            <StepPackage
-              packages={packages}
-              selected={state.selectedPackage}
-              onSelect={pkg => setState(s => ({ ...s, selectedPackage: pkg }))}
+            <StepPlan
+              plans={plans}
+              selected={state.selectedPlan}
+              onSelect={selectPlan}
             />
           )}
 
           {step === 2 && (
-            <StepTier
-              tiers={tiers}
-              selected={state.selectedTier}
-              onSelect={tier => setState(s => ({ ...s, selectedTier: tier }))}
-              currency={vendor.currency}
+            <StepPackage
+              packages={filteredPackages}
+              selected={state.selectedPackage}
+              onSelect={selectPackage}
             />
           )}
 
           {step === 3 && (
-            <StepMealTypes
-              selected={state.mealTypes}
-              onToggle={id =>
-                setState(s => ({
-                  ...s,
-                  mealTypes: s.mealTypes.includes(id)
-                    ? s.mealTypes.filter(m => m !== id)
-                    : [...s.mealTypes, id],
-                }))
-              }
+            <StepTier
+              tiers={filteredTiers}
+              selected={state.selectedTier}
+              onSelect={tier => setState(s => ({ ...s, selectedTier: tier }))}
+              currency={vendor.currency}
             />
           )}
 

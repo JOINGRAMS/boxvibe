@@ -16,6 +16,7 @@ export {
   getTiersForPlan,
   getPackagesForVendor,
   getAllTiersForVendor,
+  getPlanPackagesForVendor,
 } from './queries/storefront'
 
 export type {
@@ -23,4 +24,5 @@ export type {
   StorefrontPlan,
   StorefrontPackage,
   StorefrontTier,
+  PlanPackageLink,
 } from './queries/storefront'

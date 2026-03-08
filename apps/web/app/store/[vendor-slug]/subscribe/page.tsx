@@ -1,7 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
-import { getVendorBySlug, getPackagesForVendor, getAllTiersForVendor } from '@boxvibe/db'
+import {
+  getVendorBySlug,
+  getPlansByVendorId,
+  getPackagesForVendor,
+  getAllTiersForVendor,
+  getPlanPackagesForVendor,
+} from '@boxvibe/db'
 import SubscribeWizard from './subscribe-wizard'
 
 interface SubscribePageProps {
@@ -41,17 +47,21 @@ export default async function SubscribePage({ params }: SubscribePageProps) {
   const vendor = await getVendorBySlug(vendorSlug)
   if (!vendor) notFound()
 
-  const [packages, tiers] = await Promise.all([
+  const [plans, packages, tiers, planPackageMap] = await Promise.all([
+    getPlansByVendorId(vendor.id),
     getPackagesForVendor(vendor.id),
     getAllTiersForVendor(vendor.id),
+    getPlanPackagesForVendor(vendor.id),
   ])
 
   return (
     <Suspense fallback={<WizardSkeleton />}>
       <SubscribeWizard
         vendor={vendor}
+        plans={plans}
         packages={packages}
         tiers={tiers}
+        planPackageMap={planPackageMap}
         vendorSlug={vendorSlug}
       />
     </Suspense>

@@ -38,9 +38,15 @@ export type StorefrontPackage = {
 
 export type StorefrontTier = {
   id: string
+  plan_id: string
   variance_name_en: string
   variance_name_ar: string
   total_price: number
+}
+
+export type PlanPackageLink = {
+  plan_id: string
+  package_id: string
 }
 
 // ─── Queries (cached per request via React cache()) ──────────────────────────
@@ -121,10 +127,10 @@ export const getTiersForPlan = cache(async (planId: string): Promise<StorefrontT
   const supabase = createSupabaseAdminClient()
   const { data } = await supabase
     .from('plan_package_tiers')
-    .select('id, variance_name_en, variance_name_ar, total_price')
+    .select('id, plan_id, variance_name_en, variance_name_ar, total_price')
     .eq('plan_id', planId)
     .order('total_price')
-  return data ?? []
+  return (data ?? []).filter((r): r is StorefrontTier => r.plan_id !== null)
 })
 
 // ─── Wizard queries (vendor-scoped, for the subscribe wizard) ─────────────────
@@ -141,7 +147,7 @@ export const getPackagesForVendor = cache(async (vendorId: string): Promise<Stor
   return data ?? []
 })
 
-/** All calorie tiers across all active plans for a vendor (for the subscription wizard step 2). */
+/** All calorie tiers across all active plans for a vendor, including plan_id for client-side filtering. */
 export const getAllTiersForVendor = cache(async (vendorId: string): Promise<StorefrontTier[]> => {
   const supabase = createSupabaseAdminClient()
 
@@ -157,9 +163,32 @@ export const getAllTiersForVendor = cache(async (vendorId: string): Promise<Stor
 
   const { data } = await supabase
     .from('plan_package_tiers')
-    .select('id, variance_name_en, variance_name_ar, total_price')
+    .select('id, plan_id, variance_name_en, variance_name_ar, total_price')
     .in('plan_id', planIds)
     .order('total_price')
 
-  return data ?? []
+  return (data ?? []).filter((r): r is StorefrontTier => r.plan_id !== null)
+})
+
+/** All plan↔package links for a vendor's active plans (for client-side filtering in the wizard). */
+export const getPlanPackagesForVendor = cache(async (vendorId: string): Promise<PlanPackageLink[]> => {
+  const supabase = createSupabaseAdminClient()
+
+  const { data: planRows } = await supabase
+    .from('plans')
+    .select('id')
+    .eq('vendor_id', vendorId)
+    .eq('is_active', true)
+
+  if (!planRows || planRows.length === 0) return []
+  const planIds = planRows.map(p => p.id)
+
+  const { data } = await supabase
+    .from('plan_packages')
+    .select('plan_id, package_id')
+    .in('plan_id', planIds)
+
+  return (data ?? []).filter(
+    (r): r is PlanPackageLink => r.plan_id !== null && r.package_id !== null,
+  )
 })
