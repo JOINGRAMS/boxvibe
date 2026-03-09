@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
+import { Check, ChevronRight, Lock, CalendarDays } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type {
   StorefrontPackage,
@@ -11,27 +10,6 @@ import type {
   StorefrontVendor,
   PlanPackageLink,
 } from '@boxvibe/db'
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const TOTAL_STEPS = 4
-
-const DAYS_OPTIONS = [
-  { days: 5, label: '5 Days', sublabel: 'Mon – Fri' },
-  { days: 6, label: '6 Days', sublabel: 'Mon – Sat' },
-]
-
-const DURATION_OPTIONS = [
-  { weeks: 1, label: '1 Week', sublabel: 'Try it out' },
-  { weeks: 2, label: '2 Weeks', sublabel: 'Most popular' },
-  { weeks: 4, label: '1 Month', sublabel: 'Best value' },
-]
-
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -48,11 +26,7 @@ function getPlanEmoji(name: string): string {
 
 function getPackageEmoji(name: string): string {
   const n = name.toLowerCase()
-  if (
-    n.includes('full') ||
-    (n.includes('breakfast') && n.includes('lunch') && n.includes('dinner'))
-  )
-    return '🍽️'
+  if (n.includes('full') || (n.includes('breakfast') && n.includes('dinner'))) return '🍽️'
   if (n.includes('breakfast') && n.includes('lunch')) return '🌅'
   if (n.includes('lunch') && n.includes('dinner')) return '🥗'
   if (n.includes('breakfast')) return '🍳'
@@ -72,16 +46,13 @@ function computePrice(
   daysPerWeek: number,
   durationWeeks: number,
 ): number {
-  const dailyRate = tier.total_price / (4 * 5)
-  return Math.round(dailyRate * daysPerWeek * durationWeeks * pkg.price_multiplier)
+  return Math.round((tier.total_price / 20) * daysPerWeek * durationWeeks * pkg.price_multiplier)
 }
 
-function formatDateLong(isoDate: string): string {
-  const d = new Date(isoDate + 'T00:00:00')
-  return d.toLocaleDateString('en-AE', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
+function formatDateShort(isoDate: string): string {
+  return new Date(isoDate + 'T00:00:00').toLocaleDateString('en-AE', {
+    weekday: 'short',
+    month: 'short',
     day: 'numeric',
   })
 }
@@ -97,295 +68,213 @@ interface WizardState {
   startDate: string | null
 }
 
-function canProceed(step: number, state: WizardState): boolean {
-  switch (step) {
-    // Step 1 requires all three selections on the combined page
-    case 1: return state.selectedPlan !== null && state.selectedPackage !== null && state.selectedTier !== null
-    case 2: return state.daysPerWeek !== null && state.durationWeeks !== null
-    case 3: return state.startDate !== null
-    case 4: return true
-    default: return false
-  }
-}
+const DAYS_OPTIONS = [
+  { days: 5, label: 'Mon – Fri', sublabel: '5 days a week' },
+  { days: 6, label: 'Mon – Sat', sublabel: '6 days a week' },
+]
 
-// ─── Shared sub-components ────────────────────────────────────────────────────
+const DURATION_OPTIONS = [
+  { weeks: 1, label: 'Weekly', badge: null },
+  { weeks: 2, label: '2 Weeks', badge: 'Popular' },
+  { weeks: 4, label: 'Monthly', badge: 'Best value' },
+]
 
-function ProgressBar({ step }: { step: number }) {
-  const pct = Math.round((step / TOTAL_STEPS) * 100)
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+// ─── Phase nav ────────────────────────────────────────────────────────────────
+
+function PhaseNav() {
+  const phases = [
+    { n: 1, label: 'Customize Plan' },
+    { n: 2, label: 'Delivery & Payment' },
+    { n: 3, label: 'Select Menu' },
+  ]
   return (
-    <div className="mb-8">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs text-slate-400">Step {step} of {TOTAL_STEPS}</span>
-        <span className="text-xs font-semibold text-emerald-600">{pct}% complete</span>
-      </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-        <div
-          className="h-full rounded-full bg-emerald-500 transition-all duration-500 ease-out"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <div className="mt-3 flex items-center justify-between px-0.5">
-        {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(s => (
-          <div
-            key={s}
-            className={cn(
-              'h-2 w-2 rounded-full transition-all duration-300',
-              s < step && 'bg-emerald-500',
-              s === step && 'bg-emerald-500 ring-2 ring-emerald-200 ring-offset-1',
-              s > step && 'bg-slate-200',
+    <div className="border-b border-slate-200 bg-white">
+      <div className="mx-auto flex max-w-6xl items-center px-4 md:px-6">
+        {phases.map((ph, i) => (
+          <div key={ph.n} className="flex items-center">
+            <div
+              className={cn(
+                'flex items-center gap-2 px-3 py-4 text-sm font-medium md:px-5',
+                ph.n === 1
+                  ? 'border-b-2 border-emerald-600 text-emerald-700'
+                  : 'text-slate-400',
+              )}
+            >
+              <span
+                className={cn(
+                  'flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold',
+                  ph.n === 1 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400',
+                )}
+              >
+                {ph.n}
+              </span>
+              <span className="hidden sm:inline">{ph.label}</span>
+            </div>
+            {i < phases.length - 1 && (
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-300" />
             )}
-          />
+          </div>
         ))}
       </div>
     </div>
   )
 }
 
-function SectionLabel({ label }: { label: string }) {
-  return (
-    <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-      {label}
-    </p>
-  )
-}
+// ─── Section wrapper ──────────────────────────────────────────────────────────
 
-function SelectionCheckmark() {
-  return (
-    <span className="absolute top-4 right-4 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500">
-      <Check className="h-3.5 w-3.5 text-white" />
-    </span>
-  )
-}
-
-// ─── Step 1 (combined): Plan → Package → Tier ─────────────────────────────────
-
-function StepCustomise({
-  plans,
-  packages,
-  tiers,
-  planPackageMap,
-  state,
-  onSelectPlan,
-  onSelectPackage,
-  onSelectTier,
-  currency,
+function Section({
+  num,
+  title,
+  subtitle,
+  animate = false,
+  children,
 }: {
-  plans: StorefrontPlan[]
-  packages: StorefrontPackage[]
-  tiers: StorefrontTier[]
-  planPackageMap: PlanPackageLink[]
-  state: WizardState
-  onSelectPlan: (plan: StorefrontPlan) => void
-  onSelectPackage: (pkg: StorefrontPackage) => void
-  onSelectTier: (tier: StorefrontTier) => void
-  currency: string
+  num: number
+  title: string
+  subtitle?: string
+  animate?: boolean
+  children: React.ReactNode
 }) {
-  // Derive which packages and tiers are relevant to the current selections
-  const availablePackageIds = state.selectedPlan
-    ? new Set(
-        planPackageMap
-          .filter(r => r.plan_id === state.selectedPlan!.id)
-          .map(r => r.package_id),
-      )
-    : new Set<string>()
-
-  const filteredPackages = packages.filter(p => availablePackageIds.has(p.id))
-
-  const filteredTiers = state.selectedPlan
-    ? tiers.filter(t => t.plan_id === state.selectedPlan!.id)
-    : []
-
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="mb-1.5 text-2xl font-bold text-slate-900 md:text-3xl">
-          Build your meal plan
-        </h2>
-        <p className="text-slate-500">Make your selections below to see your price.</p>
-      </div>
-
-      {/* ── Section 1: Plan ── */}
-      <div>
-        <SectionLabel label="1 · Choose your plan" />
-        <div className="grid gap-3 sm:grid-cols-2">
-          {plans.map(plan => (
-            <button
-              key={plan.id}
-              onClick={() => onSelectPlan(plan)}
-              className={cn(
-                'group relative text-left rounded-2xl border-2 p-4 transition-all duration-200',
-                state.selectedPlan?.id === plan.id
-                  ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                  : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
-              )}
-            >
-              {state.selectedPlan?.id === plan.id && <SelectionCheckmark />}
-              <div className="mb-2 text-3xl">{getPlanEmoji(plan.name_en)}</div>
-              <h3 className="pr-8 font-semibold text-slate-900">{plan.name_en}</h3>
-              {plan.desc_en && (
-                <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{plan.desc_en}</p>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Section 2: Package (appears once plan is picked) ── */}
-      {state.selectedPlan && (
-        <div className="animate-step-in">
-          <SectionLabel label="2 · Choose your meals" />
-          {filteredPackages.length === 0 ? (
-            <p className="text-sm text-slate-400">No packages configured for this plan yet.</p>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {filteredPackages.map(pkg => (
-                <button
-                  key={pkg.id}
-                  onClick={() => onSelectPackage(pkg)}
-                  className={cn(
-                    'group relative text-left rounded-2xl border-2 p-4 transition-all duration-200',
-                    state.selectedPackage?.id === pkg.id
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
-                  )}
-                >
-                  {state.selectedPackage?.id === pkg.id && <SelectionCheckmark />}
-                  <div className="mb-2 text-3xl">{getPackageEmoji(pkg.category_en)}</div>
-                  <h3 className="pr-8 font-semibold text-slate-900">{pkg.category_en}</h3>
-                  {pkg.description_en && (
-                    <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{pkg.description_en}</p>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+    <div
+      className={cn(
+        'rounded-2xl border border-slate-200 bg-white p-6',
+        animate && 'animate-step-in',
       )}
-
-      {/* ── Section 3: Tier (appears once package is picked) ── */}
-      {state.selectedPackage && (
-        <div className="animate-step-in">
-          <SectionLabel label="3 · Choose your calorie tier" />
-          {filteredTiers.length === 0 ? (
-            <p className="text-sm text-slate-400">No calorie tiers configured for this plan yet.</p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {filteredTiers.map(tier => (
-                <button
-                  key={tier.id}
-                  onClick={() => onSelectTier(tier)}
-                  className={cn(
-                    'relative flex items-center justify-between rounded-2xl border-2 p-4 text-left transition-all duration-200',
-                    state.selectedTier?.id === tier.id
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                      : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
-                  )}
-                >
-                  {state.selectedTier?.id === tier.id && (
-                    <span className="absolute top-1/2 left-4 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500">
-                      <Check className="h-3 w-3 text-white" />
-                    </span>
-                  )}
-                  <p
-                    className={cn(
-                      'font-semibold text-slate-900 transition-all',
-                      state.selectedTier?.id === tier.id && 'ml-8',
-                    )}
-                  >
-                    {tier.variance_name_en}
-                  </p>
-                  <div className="text-right">
-                    <p className="font-bold text-slate-900">
-                      {formatCurrency(tier.total_price, currency)}
-                    </p>
-                    <p className="text-xs text-slate-400">/ month (base)</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+    >
+      <div className="mb-4">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+            {num}
+          </span>
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
         </div>
-      )}
+        {subtitle && (
+          <p className="mt-1 pl-8.5 text-sm text-slate-500">{subtitle}</p>
+        )}
+      </div>
+      {children}
     </div>
   )
 }
 
-// ─── Step 2: Duration ─────────────────────────────────────────────────────────
+// ─── Summary sidebar ──────────────────────────────────────────────────────────
 
-function StepDuration({
-  daysPerWeek,
-  durationWeeks,
-  onSetDays,
-  onSetDuration,
+function SummarySidebar({
+  state,
+  currency,
+  vendorSlug,
+  isComplete,
 }: {
-  daysPerWeek: number | null
-  durationWeeks: number | null
-  onSetDays: (days: number) => void
-  onSetDuration: (weeks: number) => void
+  state: WizardState
+  currency: string
+  vendorSlug: string
+  isComplete: boolean
 }) {
+  const { selectedPlan, selectedPackage, selectedTier, daysPerWeek, durationWeeks, startDate } = state
+
+  const price =
+    selectedPackage && selectedTier && daysPerWeek && durationWeeks
+      ? computePrice(selectedTier, selectedPackage, daysPerWeek, durationWeeks)
+      : null
+
+  const durationLabel = DURATION_OPTIONS.find(d => d.weeks === durationWeeks)?.label ?? null
+
   return (
-    <>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">How long?</h2>
-        <p className="mt-1.5 text-slate-500">Choose how many days per week and for how long.</p>
+    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      <div className="bg-slate-900 px-5 py-4">
+        <p className="text-sm font-semibold text-white">Summary</p>
       </div>
 
-      <div className="mb-7">
-        <SectionLabel label="Days per week" />
-        <div className="grid grid-cols-2 gap-3">
-          {DAYS_OPTIONS.map(opt => (
-            <button
-              key={opt.days}
-              onClick={() => onSetDays(opt.days)}
-              className={cn(
-                'relative rounded-2xl border-2 p-5 text-left transition-all duration-200',
-                daysPerWeek === opt.days
-                  ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                  : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
+      <div className="p-5 space-y-4">
+        {/* Selected plan */}
+        {selectedPlan ? (
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 text-2xl">{getPlanEmoji(selectedPlan.name_en)}</span>
+            <div>
+              <p className="font-semibold text-slate-900">{selectedPlan.name_en}</p>
+              {selectedTier && (
+                <p className="text-sm text-slate-500">{selectedTier.variance_name_en}</p>
               )}
-            >
-              {daysPerWeek === opt.days && (
-                <span className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500">
-                  <Check className="h-3 w-3 text-white" />
-                </span>
+              {selectedPackage && (
+                <p className="text-sm text-slate-500">{selectedPackage.category_en}</p>
               )}
-              <p className="text-2xl font-bold text-slate-900">{opt.days}</p>
-              <p className="text-sm text-slate-400">{opt.sublabel}</p>
-            </button>
-          ))}
-        </div>
-      </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400 italic">Make your selections to see a summary.</p>
+        )}
 
-      <div>
-        <SectionLabel label="Duration" />
-        <div className="grid grid-cols-3 gap-3">
-          {DURATION_OPTIONS.map(opt => (
-            <button
-              key={opt.weeks}
-              onClick={() => onSetDuration(opt.weeks)}
-              className={cn(
-                'relative rounded-2xl border-2 p-4 text-left transition-all duration-200',
-                durationWeeks === opt.weeks
-                  ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                  : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
-              )}
-            >
-              {durationWeeks === opt.weeks && (
-                <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500">
-                  <Check className="h-2.5 w-2.5 text-white" />
-                </span>
-              )}
-              <p className="font-bold text-slate-900">{opt.label}</p>
-              <p className="text-xs text-slate-400">{opt.sublabel}</p>
-            </button>
-          ))}
-        </div>
+        {/* Duration + date */}
+        {(durationLabel || daysPerWeek || startDate) && (
+          <div className="rounded-xl bg-slate-50 p-3 text-sm space-y-1">
+            {durationLabel && daysPerWeek && (
+              <p className="text-slate-700">
+                <span className="font-medium">{durationLabel}</span>
+                <span className="text-slate-400"> · {daysPerWeek} days/week</span>
+              </p>
+            )}
+            {startDate && (
+              <p className="flex items-center gap-1.5 text-slate-500">
+                <CalendarDays className="h-3.5 w-3.5" />
+                Starting {formatDateShort(startDate)}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Price */}
+        {price !== null ? (
+          <div className="border-t border-slate-100 pt-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-500">Total</span>
+              <span className="text-2xl font-bold text-slate-900">
+                {formatCurrency(price, currency)}
+              </span>
+            </div>
+            {durationLabel && (
+              <p className="mt-0.5 text-right text-xs text-slate-400">for {durationLabel.toLowerCase()}</p>
+            )}
+          </div>
+        ) : (
+          <div className="border-t border-slate-100 pt-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-500">Total</span>
+              <span className="text-lg font-bold text-slate-300">—</span>
+            </div>
+          </div>
+        )}
+
+        {/* CTA */}
+        {isComplete ? (
+          <a
+            href={`/store/${vendorSlug}/signup`}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+          >
+            Continue
+            <ChevronRight className="h-4 w-4" />
+          </a>
+        ) : (
+          <button
+            disabled
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-slate-100 py-3.5 text-sm font-medium text-slate-400 cursor-not-allowed"
+          >
+            <Lock className="h-3.5 w-3.5" />
+            Complete your plan
+          </button>
+        )}
       </div>
-    </>
+    </div>
   )
 }
 
-// ─── Step 3: Start date ───────────────────────────────────────────────────────
+// ─── Calendar picker ──────────────────────────────────────────────────────────
 
 function CalendarPicker({
   value,
@@ -396,7 +285,6 @@ function CalendarPicker({
 }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-
   const minDate = new Date(today)
   minDate.setDate(minDate.getDate() + 2)
 
@@ -412,70 +300,46 @@ function CalendarPicker({
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ]
 
-  function isDisabled(day: number): boolean {
+  function isDisabled(day: number) {
     const d = new Date(view.year, view.month, day)
     return d.getDay() === 5 || d < minDate
   }
 
-  function isSelected(day: number): boolean {
+  function isSelected(day: number) {
     if (!value) return false
     const d = new Date(value + 'T00:00:00')
-    return (
-      d.getFullYear() === view.year &&
-      d.getMonth() === view.month &&
-      d.getDate() === day
-    )
+    return d.getFullYear() === view.year && d.getMonth() === view.month && d.getDate() === day
   }
 
   function handleSelect(day: number) {
     if (isDisabled(day)) return
     const d = new Date(view.year, view.month, day)
-    const iso = [
-      d.getFullYear(),
-      String(d.getMonth() + 1).padStart(2, '0'),
-      String(d.getDate()).padStart(2, '0'),
-    ].join('-')
-    onChange(iso)
-  }
-
-  function prevMonth() {
-    setView(v =>
-      v.month === 0 ? { year: v.year - 1, month: 11 } : { ...v, month: v.month - 1 },
-    )
-  }
-
-  function nextMonth() {
-    setView(v =>
-      v.month === 11 ? { year: v.year + 1, month: 0 } : { ...v, month: v.month + 1 },
-    )
+    onChange([d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-'))
   }
 
   return (
-    <div className="mx-auto max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="max-w-xs">
+      <div className="mb-3 flex items-center justify-between">
         <button
-          onClick={prevMonth}
-          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          onClick={() => setView(v => v.month === 0 ? { year: v.year - 1, month: 11 } : { ...v, month: v.month - 1 })}
+          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
         >
-          <ChevronLeft className="h-4 w-4" />
+          ‹
         </button>
-        <span className="font-semibold text-slate-900">
+        <span className="text-sm font-semibold text-slate-900">
           {MONTH_NAMES[view.month]} {view.year}
         </span>
         <button
-          onClick={nextMonth}
-          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          onClick={() => setView(v => v.month === 11 ? { year: v.year + 1, month: 0 } : { ...v, month: v.month + 1 })}
+          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
         >
-          <ChevronRight className="h-4 w-4" />
+          ›
         </button>
       </div>
 
-      <div className="mb-2 grid grid-cols-7 text-center">
+      <div className="mb-1 grid grid-cols-7 text-center">
         {DAY_NAMES.map(d => (
-          <div
-            key={d}
-            className={cn('py-1 text-xs font-medium', d === 'Fri' ? 'text-red-300' : 'text-slate-400')}
-          >
+          <div key={d} className={cn('py-1 text-xs font-medium', d === 'Fri' ? 'text-red-400' : 'text-slate-400')}>
             {d}
           </div>
         ))}
@@ -495,7 +359,7 @@ function CalendarPicker({
                 'flex aspect-square items-center justify-center rounded-lg text-sm transition-colors',
                 disabled && 'cursor-not-allowed text-slate-200',
                 !disabled && !selected && 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700',
-                selected && 'bg-emerald-500 font-semibold text-white',
+                selected && 'bg-emerald-600 font-semibold text-white',
               )}
             >
               {day}
@@ -504,109 +368,10 @@ function CalendarPicker({
         })}
       </div>
 
-      <p className="mt-4 text-center text-xs text-slate-400">
-        Earliest start:{' '}
-        {minDate.toLocaleDateString('en-AE', { month: 'short', day: 'numeric' })} · Fridays
-        unavailable
+      <p className="mt-3 text-xs text-slate-400">
+        Earliest: {minDate.toLocaleDateString('en-AE', { month: 'short', day: 'numeric' })} · Fridays unavailable
       </p>
     </div>
-  )
-}
-
-function StepStartDate({
-  value,
-  onChange,
-}: {
-  value: string | null
-  onChange: (iso: string) => void
-}) {
-  return (
-    <>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">When do you want to start?</h2>
-        <p className="mt-1.5 text-slate-500">Pick your first delivery day. Fridays are unavailable.</p>
-      </div>
-      <CalendarPicker value={value} onChange={onChange} />
-      {value && (
-        <p className="mt-5 text-center text-sm font-medium text-emerald-600">
-          Starting {formatDateLong(value)}
-        </p>
-      )}
-    </>
-  )
-}
-
-// ─── Step 4: Summary ──────────────────────────────────────────────────────────
-
-function SummaryRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-start justify-between gap-4 px-6 py-4">
-      <span className="shrink-0 text-sm text-slate-500">{label}</span>
-      <span className="text-right text-sm font-medium text-slate-900">{value}</span>
-    </div>
-  )
-}
-
-function StepSummary({
-  state,
-  currency,
-  vendorSlug,
-}: {
-  state: WizardState
-  currency: string
-  vendorSlug: string
-}) {
-  const { selectedPlan, selectedPackage, selectedTier, daysPerWeek, durationWeeks, startDate } = state
-
-  const price =
-    selectedPackage && selectedTier && daysPerWeek && durationWeeks
-      ? computePrice(selectedTier, selectedPackage, daysPerWeek, durationWeeks)
-      : null
-
-  const durationLabel = DURATION_OPTIONS.find(d => d.weeks === durationWeeks)?.label ?? '—'
-
-  return (
-    <>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Your order summary</h2>
-        <p className="mt-1.5 text-slate-500">Review your selections before checking out.</p>
-      </div>
-
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="divide-y divide-slate-100">
-          <SummaryRow label="Plan" value={selectedPlan?.name_en ?? '—'} />
-          <SummaryRow label="Meals" value={selectedPackage?.category_en ?? '—'} />
-          <SummaryRow label="Calorie tier" value={selectedTier?.variance_name_en ?? '—'} />
-          <SummaryRow label="Days / week" value={daysPerWeek ? `${daysPerWeek} days` : '—'} />
-          <SummaryRow label="Duration" value={durationLabel} />
-          <SummaryRow label="Start date" value={startDate ? formatDateLong(startDate) : '—'} />
-        </div>
-
-        <div className="bg-emerald-50 px-6 py-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="font-medium text-slate-700">Total</span>
-              <p className="text-xs text-slate-400">
-                {durationWeeks === 4 ? '1 month' : durationWeeks === 2 ? '2 weeks' : '1 week'}
-              </p>
-            </div>
-            <span className="text-3xl font-bold text-emerald-700">
-              {price !== null ? formatCurrency(price, currency) : '—'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <a
-        href={`/store/${vendorSlug}/signup`}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 py-4 text-base font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
-      >
-        Proceed to Checkout
-      </a>
-      <p className="mt-3 text-center text-xs text-slate-400">
-        You&apos;ll create your account on the next screen
-      </p>
-    </>
   )
 }
 
@@ -629,10 +394,6 @@ export default function SubscribeWizard({
   planPackageMap,
   vendorSlug,
 }: WizardProps) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const [step, setStep] = useState(1)
   const [state, setState] = useState<WizardState>({
     selectedPlan: null,
     selectedPackage: null,
@@ -642,103 +403,302 @@ export default function SubscribeWizard({
     startDate: null,
   })
 
-  useEffect(() => {
-    const s = parseInt(searchParams.get('step') ?? '1', 10)
-    if (s >= 1 && s <= TOTAL_STEPS) setStep(s)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  function goToStep(n: number) {
-    const clamped = Math.max(1, Math.min(n, TOTAL_STEPS))
-    setStep(clamped)
-    router.replace(`?step=${clamped}`, { scroll: false })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
   function selectPlan(plan: StorefrontPlan) {
-    // Changing plan resets package + tier
     setState(s => ({ ...s, selectedPlan: plan, selectedPackage: null, selectedTier: null }))
   }
 
   function selectPackage(pkg: StorefrontPackage) {
-    // Changing package resets tier
     setState(s => ({ ...s, selectedPackage: pkg, selectedTier: null }))
   }
 
-  const ready = canProceed(step, state)
-  const isLastStep = step === TOTAL_STEPS
+  // Derived data
+  const availablePackageIds = state.selectedPlan
+    ? new Set(planPackageMap.filter(r => r.plan_id === state.selectedPlan!.id).map(r => r.package_id))
+    : new Set<string>()
+  const filteredPackages = packages.filter(p => availablePackageIds.has(p.id))
+  const filteredTiers = state.selectedPlan ? tiers.filter(t => t.plan_id === state.selectedPlan!.id) : []
+
+  const isComplete =
+    state.selectedPlan !== null &&
+    state.selectedPackage !== null &&
+    state.selectedTier !== null &&
+    state.daysPerWeek !== null &&
+    state.durationWeeks !== null &&
+    state.startDate !== null
 
   return (
-    <div className="pb-32 md:pb-16">
-      <div className="mx-auto max-w-2xl px-4 py-8 md:px-6 md:py-12">
-        <ProgressBar step={step} />
+    <div className="min-h-screen bg-slate-50 pb-24 lg:pb-0">
+      <PhaseNav />
 
-        <div key={step} className="animate-step-in">
-          {step === 1 && (
-            <StepCustomise
-              plans={plans}
-              packages={packages}
-              tiers={tiers}
-              planPackageMap={planPackageMap}
+      <div className="mx-auto max-w-6xl px-4 py-8 md:px-6 lg:grid lg:grid-cols-[1fr_340px] lg:gap-8 xl:grid-cols-[1fr_380px]">
+        {/* ── Left: cascading form ── */}
+        <div className="space-y-4">
+
+          {/* Section 1: Plan */}
+          <Section num={1} title="Choose your plan" subtitle="Pick the dietary approach that fits your goal.">
+            <div className="flex flex-wrap gap-2">
+              {plans.length === 0 && (
+                <p className="text-sm text-slate-400">No plans available yet.</p>
+              )}
+              {plans.map(plan => {
+                const isSelected = state.selectedPlan?.id === plan.id
+                return (
+                  <button
+                    key={plan.id}
+                    onClick={() => selectPlan(plan)}
+                    className={cn(
+                      'flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-medium transition-all duration-200',
+                      isSelected
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
+                    )}
+                  >
+                    <span>{getPlanEmoji(plan.name_en)}</span>
+                    <span>{plan.name_en}</span>
+                    {isSelected && <Check className="h-3.5 w-3.5" />}
+                  </button>
+                )
+              })}
+            </div>
+            {state.selectedPlan?.desc_en && (
+              <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3">
+                <p className="text-sm text-slate-600">{state.selectedPlan.desc_en}</p>
+              </div>
+            )}
+          </Section>
+
+          {/* Section 2: Package / meals */}
+          {state.selectedPlan && (
+            <Section num={2} title="Select your meals" subtitle="Which meal times would you like each day?" animate>
+              {filteredPackages.length === 0 ? (
+                <p className="text-sm text-slate-400">No packages configured for this plan yet.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {filteredPackages.map(pkg => {
+                    const isSelected = state.selectedPackage?.id === pkg.id
+                    return (
+                      <button
+                        key={pkg.id}
+                        onClick={() => selectPackage(pkg)}
+                        className={cn(
+                          'flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-medium transition-all duration-200',
+                          isSelected
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
+                        )}
+                      >
+                        <span>{getPackageEmoji(pkg.category_en)}</span>
+                        <span>{pkg.category_en}</span>
+                        {isSelected && <Check className="h-3.5 w-3.5" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              {state.selectedPackage?.description_en && (
+                <div className="mt-3 rounded-xl bg-slate-50 px-4 py-3">
+                  <p className="text-sm text-slate-600">{state.selectedPackage.description_en}</p>
+                </div>
+              )}
+            </Section>
+          )}
+
+          {/* Section 3: Calorie tier */}
+          {state.selectedPackage && (
+            <Section num={3} title="How many calories per day?" subtitle="Pick a tier that matches your goal." animate>
+              {filteredTiers.length === 0 ? (
+                <p className="text-sm text-slate-400">No calorie tiers configured for this plan yet.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {filteredTiers.map(tier => {
+                    const isSelected = state.selectedTier?.id === tier.id
+                    return (
+                      <button
+                        key={tier.id}
+                        onClick={() => setState(s => ({ ...s, selectedTier: tier }))}
+                        className={cn(
+                          'flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-medium transition-all duration-200',
+                          isSelected
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
+                        )}
+                      >
+                        <span>{tier.variance_name_en}</span>
+                        {isSelected && <Check className="h-3.5 w-3.5" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              {state.selectedTier && (
+                <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                  <p className="text-sm text-slate-600">Base monthly rate</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {formatCurrency(state.selectedTier.total_price, vendor.currency)}
+                  </p>
+                </div>
+              )}
+            </Section>
+          )}
+
+          {/* Section 4: Delivery days */}
+          {state.selectedTier && (
+            <Section num={4} title="Preferred delivery days" animate>
+              <div className="grid grid-cols-2 gap-3">
+                {DAYS_OPTIONS.map(opt => {
+                  const isSelected = state.daysPerWeek === opt.days
+                  return (
+                    <button
+                      key={opt.days}
+                      onClick={() => setState(s => ({ ...s, daysPerWeek: opt.days }))}
+                      className={cn(
+                        'relative flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200',
+                        isSelected
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300',
+                      )}
+                    >
+                      {isSelected && (
+                        <span className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500">
+                          <Check className="h-3 w-3 text-white" />
+                        </span>
+                      )}
+                      <div>
+                        <p className="font-semibold text-slate-900">{opt.label}</p>
+                        <p className="text-xs text-slate-500">{opt.sublabel}</p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="mt-3 text-xs text-slate-400">We don&apos;t deliver on Fridays.</p>
+            </Section>
+          )}
+
+          {/* Section 5: Duration */}
+          {state.daysPerWeek && (
+            <Section num={5} title="Plan duration" animate>
+              <div className="flex flex-col gap-2">
+                {DURATION_OPTIONS.map(opt => {
+                  const isSelected = state.durationWeeks === opt.weeks
+                  const price =
+                    state.selectedTier && state.selectedPackage
+                      ? computePrice(state.selectedTier, state.selectedPackage, state.daysPerWeek!, opt.weeks)
+                      : null
+                  return (
+                    <button
+                      key={opt.weeks}
+                      onClick={() => setState(s => ({ ...s, durationWeeks: opt.weeks }))}
+                      className={cn(
+                        'relative flex items-center justify-between rounded-2xl border-2 px-5 py-4 text-left transition-all duration-200',
+                        isSelected
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300',
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        {isSelected && (
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500">
+                            <Check className="h-3 w-3 text-white" />
+                          </span>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-slate-900">{opt.label}</p>
+                            {opt.badge && (
+                              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                                {opt.badge}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {price !== null && (
+                        <div className="text-right">
+                          <p className="font-bold text-slate-900">
+                            {formatCurrency(price, vendor.currency)}
+                          </p>
+                          <p className="text-xs text-slate-400">total</p>
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </Section>
+          )}
+
+          {/* Section 6: Start date */}
+          {state.durationWeeks && (
+            <Section num={6} title="When do you want to start?" subtitle="Fridays unavailable · minimum 2 days from today." animate>
+              <CalendarPicker
+                value={state.startDate}
+                onChange={date => setState(s => ({ ...s, startDate: date }))}
+              />
+              {state.startDate && (
+                <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3">
+                  <Check className="h-4 w-4 text-emerald-600" />
+                  <p className="text-sm font-medium text-emerald-700">
+                    First delivery: {formatDateShort(state.startDate)}
+                  </p>
+                </div>
+              )}
+            </Section>
+          )}
+        </div>
+
+        {/* ── Right: sticky summary (desktop only) ── */}
+        <div className="hidden lg:block">
+          <div className="sticky top-6">
+            <SummarySidebar
               state={state}
-              onSelectPlan={selectPlan}
-              onSelectPackage={selectPackage}
-              onSelectTier={tier => setState(s => ({ ...s, selectedTier: tier }))}
               currency={vendor.currency}
+              vendorSlug={vendorSlug}
+              isComplete={isComplete}
             />
-          )}
-
-          {step === 2 && (
-            <StepDuration
-              daysPerWeek={state.daysPerWeek}
-              durationWeeks={state.durationWeeks}
-              onSetDays={days => setState(s => ({ ...s, daysPerWeek: days }))}
-              onSetDuration={weeks => setState(s => ({ ...s, durationWeeks: weeks }))}
-            />
-          )}
-
-          {step === 3 && (
-            <StepStartDate
-              value={state.startDate}
-              onChange={date => setState(s => ({ ...s, startDate: date }))}
-            />
-          )}
-
-          {step === 4 && (
-            <StepSummary state={state} currency={vendor.currency} vendorSlug={vendorSlug} />
-          )}
+          </div>
         </div>
       </div>
 
-      {/* Sticky nav — hidden on the summary step */}
-      {!isLastStep && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-100 bg-white/95 px-4 py-4 backdrop-blur-sm md:static md:border-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-none">
-          <div className="mx-auto flex max-w-2xl items-center gap-3 md:mt-8">
-            {step > 1 && (
-              <button
-                onClick={() => goToStep(step - 1)}
-                className="flex h-12 items-center gap-2 rounded-full border border-slate-200 px-5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Back
-              </button>
+      {/* ── Mobile bottom bar ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm lg:hidden">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            {state.selectedPlan ? (
+              <>
+                <p className="text-xs text-slate-500">{state.selectedPlan.name_en}</p>
+                {state.selectedTier && state.selectedPackage && state.daysPerWeek && state.durationWeeks ? (
+                  <p className="font-bold text-slate-900">
+                    {formatCurrency(
+                      computePrice(state.selectedTier, state.selectedPackage, state.daysPerWeek, state.durationWeeks),
+                      vendor.currency,
+                    )}
+                  </p>
+                ) : (
+                  <p className="text-sm text-slate-400">Complete your plan above</p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-slate-400">Select a plan to get started</p>
             )}
-
-            <button
-              onClick={() => goToStep(step + 1)}
-              disabled={!ready}
-              className={cn(
-                'flex h-12 flex-1 items-center justify-center gap-2 rounded-full text-sm font-semibold text-white transition-all duration-200',
-                ready
-                  ? 'bg-emerald-600 shadow-sm hover:bg-emerald-700'
-                  : 'cursor-not-allowed bg-slate-200 text-slate-400',
-              )}
-            >
-              {step === TOTAL_STEPS - 1 ? 'Review my order' : 'Continue'}
-              {ready && <ChevronRight className="h-4 w-4" />}
-            </button>
           </div>
+          {isComplete ? (
+            <a
+              href={`/store/${vendorSlug}/signup`}
+              className="flex items-center gap-1.5 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white"
+            >
+              Continue <ChevronRight className="h-4 w-4" />
+            </a>
+          ) : (
+            <button
+              disabled
+              className="flex items-center gap-1.5 rounded-full bg-slate-200 px-5 py-2.5 text-sm font-medium text-slate-400"
+            >
+              Continue
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
