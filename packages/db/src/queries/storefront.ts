@@ -34,6 +34,7 @@ export type StorefrontPackage = {
   cover_image_url: string | null
   price_multiplier: number
   slug: string | null
+  meal_types: string[]
 }
 
 export type StorefrontTier = {
@@ -47,6 +48,15 @@ export type StorefrontTier = {
 export type PlanPackageLink = {
   plan_id: string
   package_id: string
+}
+
+export type StorefrontMealType = {
+  id: string
+  key: string         // 'breakfast' | 'morning_snack' | 'lunch' | 'dinner' | 'evening_snack'
+  label_en: string
+  label_ar: string
+  price_per_day: number
+  display_order: number
 }
 
 // ─── Queries (cached per request via React cache()) ──────────────────────────
@@ -103,7 +113,7 @@ export const getPackagesForPlan = cache(async (planId: string): Promise<Storefro
   // Step 2: fetch the actual package records
   const { data } = await supabase
     .from('packages')
-    .select('id, category_en, category_ar, description_en, description_ar, cover_image_url, price_multiplier, slug')
+    .select('id, category_en, category_ar, description_en, description_ar, cover_image_url, price_multiplier, slug, meal_types')
     .in('id', packageIds)
     .eq('is_active', true)
     .order('category_en')
@@ -115,7 +125,7 @@ export const getPackageBySlug = cache(async (vendorId: string, packageSlug: stri
   const supabase = createSupabaseAdminClient()
   const { data } = await supabase
     .from('packages')
-    .select('id, category_en, category_ar, description_en, description_ar, cover_image_url, price_multiplier, slug')
+    .select('id, category_en, category_ar, description_en, description_ar, cover_image_url, price_multiplier, slug, meal_types')
     .eq('vendor_id', vendorId)
     .eq('slug', packageSlug)
     .eq('is_active', true)
@@ -140,7 +150,7 @@ export const getPackagesForVendor = cache(async (vendorId: string): Promise<Stor
   const supabase = createSupabaseAdminClient()
   const { data } = await supabase
     .from('packages')
-    .select('id, category_en, category_ar, description_en, description_ar, cover_image_url, price_multiplier, slug')
+    .select('id, category_en, category_ar, description_en, description_ar, cover_image_url, price_multiplier, slug, meal_types')
     .eq('vendor_id', vendorId)
     .eq('is_active', true)
     .order('price_multiplier')
@@ -191,4 +201,16 @@ export const getPlanPackagesForVendor = cache(async (vendorId: string): Promise<
   return (data ?? []).filter(
     (r): r is PlanPackageLink => r.plan_id !== null && r.package_id !== null,
   )
+})
+
+/** Active meal types for a vendor, ordered by display_order (for the subscribe wizard). */
+export const getMealTypesForVendor = cache(async (vendorId: string): Promise<StorefrontMealType[]> => {
+  const supabase = createSupabaseAdminClient()
+  const { data } = await supabase
+    .from('meal_types')
+    .select('id, key, label_en, label_ar, price_per_day, display_order')
+    .eq('vendor_id', vendorId)
+    .eq('is_active', true)
+    .order('display_order')
+  return data ?? []
 })

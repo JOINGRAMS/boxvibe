@@ -1047,6 +1047,50 @@ export type Database = {
           },
         ]
       }
+      meal_types: {
+        Row: {
+          created_at: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          key: string
+          label_ar: string
+          label_en: string
+          price_per_day: number
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          key: string
+          label_ar?: string
+          label_en: string
+          price_per_day?: number
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          key?: string
+          label_ar?: string
+          label_en?: string
+          price_per_day?: number
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_types_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meals_category_information: {
         Row: {
           category_id: string | null
@@ -1276,6 +1320,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_custom: boolean
+          meal_types: string[]
           price_multiplier: number
           slug: string | null
           updated_at: string
@@ -1293,6 +1338,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_custom?: boolean
+          meal_types?: string[]
           price_multiplier?: number
           slug?: string | null
           updated_at: string
@@ -1310,6 +1356,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_custom?: boolean
+          meal_types?: string[]
           price_multiplier?: number
           slug?: string | null
           updated_at?: string

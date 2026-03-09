@@ -4,9 +4,8 @@ import { Suspense } from 'react'
 import {
   getVendorBySlug,
   getPlansByVendorId,
-  getPackagesForVendor,
+  getMealTypesForVendor,
   getAllTiersForVendor,
-  getPlanPackagesForVendor,
 } from '@boxvibe/db'
 import SubscribeWizard from './subscribe-wizard'
 
@@ -47,11 +46,10 @@ export default async function SubscribePage({ params }: SubscribePageProps) {
   const vendor = await getVendorBySlug(vendorSlug)
   if (!vendor) notFound()
 
-  const [plans, packages, tiers, planPackageMap] = await Promise.all([
+  const [plans, mealTypes, tiers] = await Promise.all([
     getPlansByVendorId(vendor.id),
-    getPackagesForVendor(vendor.id),
+    getMealTypesForVendor(vendor.id),
     getAllTiersForVendor(vendor.id),
-    getPlanPackagesForVendor(vendor.id),
   ])
 
   return (
@@ -59,9 +57,8 @@ export default async function SubscribePage({ params }: SubscribePageProps) {
       <SubscribeWizard
         vendor={vendor}
         plans={plans}
-        packages={packages}
+        mealTypes={mealTypes}
         tiers={tiers}
-        planPackageMap={planPackageMap}
         vendorSlug={vendorSlug}
       />
     </Suspense>
