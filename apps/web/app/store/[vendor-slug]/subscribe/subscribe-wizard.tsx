@@ -14,7 +14,7 @@ import type {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const TOTAL_STEPS = 6
+const TOTAL_STEPS = 4
 
 const DAYS_OPTIONS = [
   { days: 5, label: '5 Days', sublabel: 'Mon – Fri' },
@@ -66,7 +66,6 @@ function formatCurrency(amount: number, currency: string): string {
   return `${currency} ${Math.round(amount).toLocaleString('en-AE')}`
 }
 
-/** Prorate: total_price is a monthly rate (4 weeks × 5 days). */
 function computePrice(
   tier: StorefrontTier,
   pkg: StorefrontPackage,
@@ -100,12 +99,11 @@ interface WizardState {
 
 function canProceed(step: number, state: WizardState): boolean {
   switch (step) {
-    case 1: return state.selectedPlan !== null
-    case 2: return state.selectedPackage !== null
-    case 3: return state.selectedTier !== null
-    case 4: return state.daysPerWeek !== null && state.durationWeeks !== null
-    case 5: return state.startDate !== null
-    case 6: return true
+    // Step 1 requires all three selections on the combined page
+    case 1: return state.selectedPlan !== null && state.selectedPackage !== null && state.selectedTier !== null
+    case 2: return state.daysPerWeek !== null && state.durationWeeks !== null
+    case 3: return state.startDate !== null
+    case 4: return true
     default: return false
   }
 }
@@ -143,12 +141,11 @@ function ProgressBar({ step }: { step: number }) {
   )
 }
 
-function StepHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+function SectionLabel({ label }: { label: string }) {
   return (
-    <div className="mb-6">
-      <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">{title}</h2>
-      {subtitle && <p className="mt-1.5 text-slate-500">{subtitle}</p>}
-    </div>
+    <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+      {label}
+    </p>
   )
 }
 
@@ -160,175 +157,160 @@ function SelectionCheckmark() {
   )
 }
 
-// ─── Step 1: Plan ─────────────────────────────────────────────────────────────
+// ─── Step 1 (combined): Plan → Package → Tier ─────────────────────────────────
 
-function StepPlan({
+function StepCustomise({
   plans,
-  selected,
-  onSelect,
-}: {
-  plans: StorefrontPlan[]
-  selected: StorefrontPlan | null
-  onSelect: (plan: StorefrontPlan) => void
-}) {
-  if (plans.length === 0) {
-    return (
-      <>
-        <StepHeader title="Choose your plan" />
-        <p className="text-slate-400">No plans available yet — check back soon.</p>
-      </>
-    )
-  }
-
-  return (
-    <>
-      <StepHeader
-        title="Choose your plan"
-        subtitle="Pick the dietary approach that fits your goal."
-      />
-      <div className="grid gap-4 sm:grid-cols-2">
-        {plans.map(plan => (
-          <button
-            key={plan.id}
-            onClick={() => onSelect(plan)}
-            className={cn(
-              'group relative text-left rounded-2xl border-2 p-5 transition-all duration-200',
-              selected?.id === plan.id
-                ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
-            )}
-          >
-            {selected?.id === plan.id && <SelectionCheckmark />}
-            <div className="mb-3 text-4xl">{getPlanEmoji(plan.name_en)}</div>
-            <h3 className="mb-1 pr-8 font-semibold text-slate-900">{plan.name_en}</h3>
-            {plan.desc_en && (
-              <p className="line-clamp-2 text-sm text-slate-500">{plan.desc_en}</p>
-            )}
-          </button>
-        ))}
-      </div>
-    </>
-  )
-}
-
-// ─── Step 2: Package ──────────────────────────────────────────────────────────
-
-function StepPackage({
   packages,
-  selected,
-  onSelect,
-}: {
-  packages: StorefrontPackage[]
-  selected: StorefrontPackage | null
-  onSelect: (pkg: StorefrontPackage) => void
-}) {
-  if (packages.length === 0) {
-    return (
-      <>
-        <StepHeader title="Choose your meals" />
-        <p className="text-slate-400">No packages configured for this plan yet.</p>
-      </>
-    )
-  }
-
-  return (
-    <>
-      <StepHeader
-        title="Choose your meals"
-        subtitle="Which meal times would you like covered each day?"
-      />
-      <div className="grid gap-4 sm:grid-cols-2">
-        {packages.map(pkg => (
-          <button
-            key={pkg.id}
-            onClick={() => onSelect(pkg)}
-            className={cn(
-              'group relative text-left rounded-2xl border-2 p-5 transition-all duration-200',
-              selected?.id === pkg.id
-                ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
-            )}
-          >
-            {selected?.id === pkg.id && <SelectionCheckmark />}
-            <div className="mb-3 text-4xl">{getPackageEmoji(pkg.category_en)}</div>
-            <h3 className="mb-1 pr-8 font-semibold text-slate-900">{pkg.category_en}</h3>
-            {pkg.description_en && (
-              <p className="line-clamp-2 text-sm text-slate-500">{pkg.description_en}</p>
-            )}
-          </button>
-        ))}
-      </div>
-    </>
-  )
-}
-
-// ─── Step 3: Calorie tier ─────────────────────────────────────────────────────
-
-function StepTier({
   tiers,
-  selected,
-  onSelect,
+  planPackageMap,
+  state,
+  onSelectPlan,
+  onSelectPackage,
+  onSelectTier,
   currency,
 }: {
+  plans: StorefrontPlan[]
+  packages: StorefrontPackage[]
   tiers: StorefrontTier[]
-  selected: StorefrontTier | null
-  onSelect: (tier: StorefrontTier) => void
+  planPackageMap: PlanPackageLink[]
+  state: WizardState
+  onSelectPlan: (plan: StorefrontPlan) => void
+  onSelectPackage: (pkg: StorefrontPackage) => void
+  onSelectTier: (tier: StorefrontTier) => void
   currency: string
 }) {
-  if (tiers.length === 0) {
-    return (
-      <>
-        <StepHeader title="How many calories per day?" />
-        <p className="text-slate-400">No calorie tiers configured for this plan yet.</p>
-      </>
-    )
-  }
+  // Derive which packages and tiers are relevant to the current selections
+  const availablePackageIds = state.selectedPlan
+    ? new Set(
+        planPackageMap
+          .filter(r => r.plan_id === state.selectedPlan!.id)
+          .map(r => r.package_id),
+      )
+    : new Set<string>()
+
+  const filteredPackages = packages.filter(p => availablePackageIds.has(p.id))
+
+  const filteredTiers = state.selectedPlan
+    ? tiers.filter(t => t.plan_id === state.selectedPlan!.id)
+    : []
 
   return (
-    <>
-      <StepHeader
-        title="How many calories per day?"
-        subtitle="Pick a calorie tier that matches your goal."
-      />
-      <div className="flex flex-col gap-3">
-        {tiers.map(tier => (
-          <button
-            key={tier.id}
-            onClick={() => onSelect(tier)}
-            className={cn(
-              'relative flex items-center justify-between rounded-2xl border-2 p-5 text-left transition-all duration-200',
-              selected?.id === tier.id
-                ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
-            )}
-          >
-            {selected?.id === tier.id && (
-              <span className="absolute top-1/2 left-4 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500">
-                <Check className="h-3 w-3 text-white" />
-              </span>
-            )}
-            <p
+    <div className="space-y-8">
+      <div>
+        <h2 className="mb-1.5 text-2xl font-bold text-slate-900 md:text-3xl">
+          Build your meal plan
+        </h2>
+        <p className="text-slate-500">Make your selections below to see your price.</p>
+      </div>
+
+      {/* ── Section 1: Plan ── */}
+      <div>
+        <SectionLabel label="1 · Choose your plan" />
+        <div className="grid gap-3 sm:grid-cols-2">
+          {plans.map(plan => (
+            <button
+              key={plan.id}
+              onClick={() => onSelectPlan(plan)}
               className={cn(
-                'font-semibold text-slate-900 transition-all',
-                selected?.id === tier.id && 'ml-8',
+                'group relative text-left rounded-2xl border-2 p-4 transition-all duration-200',
+                state.selectedPlan?.id === plan.id
+                  ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                  : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
               )}
             >
-              {tier.variance_name_en}
-            </p>
-            <div className="text-right">
-              <p className="font-bold text-slate-900">
-                {formatCurrency(tier.total_price, currency)}
-              </p>
-              <p className="text-xs text-slate-400">/ month (base)</p>
-            </div>
-          </button>
-        ))}
+              {state.selectedPlan?.id === plan.id && <SelectionCheckmark />}
+              <div className="mb-2 text-3xl">{getPlanEmoji(plan.name_en)}</div>
+              <h3 className="pr-8 font-semibold text-slate-900">{plan.name_en}</h3>
+              {plan.desc_en && (
+                <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{plan.desc_en}</p>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
-    </>
+
+      {/* ── Section 2: Package (appears once plan is picked) ── */}
+      {state.selectedPlan && (
+        <div className="animate-step-in">
+          <SectionLabel label="2 · Choose your meals" />
+          {filteredPackages.length === 0 ? (
+            <p className="text-sm text-slate-400">No packages configured for this plan yet.</p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {filteredPackages.map(pkg => (
+                <button
+                  key={pkg.id}
+                  onClick={() => onSelectPackage(pkg)}
+                  className={cn(
+                    'group relative text-left rounded-2xl border-2 p-4 transition-all duration-200',
+                    state.selectedPackage?.id === pkg.id
+                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                      : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
+                  )}
+                >
+                  {state.selectedPackage?.id === pkg.id && <SelectionCheckmark />}
+                  <div className="mb-2 text-3xl">{getPackageEmoji(pkg.category_en)}</div>
+                  <h3 className="pr-8 font-semibold text-slate-900">{pkg.category_en}</h3>
+                  {pkg.description_en && (
+                    <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{pkg.description_en}</p>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Section 3: Tier (appears once package is picked) ── */}
+      {state.selectedPackage && (
+        <div className="animate-step-in">
+          <SectionLabel label="3 · Choose your calorie tier" />
+          {filteredTiers.length === 0 ? (
+            <p className="text-sm text-slate-400">No calorie tiers configured for this plan yet.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {filteredTiers.map(tier => (
+                <button
+                  key={tier.id}
+                  onClick={() => onSelectTier(tier)}
+                  className={cn(
+                    'relative flex items-center justify-between rounded-2xl border-2 p-4 text-left transition-all duration-200',
+                    state.selectedTier?.id === tier.id
+                      ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                      : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm',
+                  )}
+                >
+                  {state.selectedTier?.id === tier.id && (
+                    <span className="absolute top-1/2 left-4 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500">
+                      <Check className="h-3 w-3 text-white" />
+                    </span>
+                  )}
+                  <p
+                    className={cn(
+                      'font-semibold text-slate-900 transition-all',
+                      state.selectedTier?.id === tier.id && 'ml-8',
+                    )}
+                  >
+                    {tier.variance_name_en}
+                  </p>
+                  <div className="text-right">
+                    <p className="font-bold text-slate-900">
+                      {formatCurrency(tier.total_price, currency)}
+                    </p>
+                    <p className="text-xs text-slate-400">/ month (base)</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
-// ─── Step 4: Duration ─────────────────────────────────────────────────────────
+// ─── Step 2: Duration ─────────────────────────────────────────────────────────
 
 function StepDuration({
   daysPerWeek,
@@ -343,12 +325,13 @@ function StepDuration({
 }) {
   return (
     <>
-      <StepHeader title="How long?" subtitle="Choose how many days per week and for how long." />
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">How long?</h2>
+        <p className="mt-1.5 text-slate-500">Choose how many days per week and for how long.</p>
+      </div>
 
       <div className="mb-7">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-          Days per week
-        </p>
+        <SectionLabel label="Days per week" />
         <div className="grid grid-cols-2 gap-3">
           {DAYS_OPTIONS.map(opt => (
             <button
@@ -374,9 +357,7 @@ function StepDuration({
       </div>
 
       <div>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-          Duration
-        </p>
+        <SectionLabel label="Duration" />
         <div className="grid grid-cols-3 gap-3">
           {DURATION_OPTIONS.map(opt => (
             <button
@@ -404,7 +385,7 @@ function StepDuration({
   )
 }
 
-// ─── Step 5: Start date (custom calendar) ─────────────────────────────────────
+// ─── Step 3: Start date ───────────────────────────────────────────────────────
 
 function CalendarPicker({
   value,
@@ -471,7 +452,6 @@ function CalendarPicker({
 
   return (
     <div className="mx-auto max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      {/* Month nav */}
       <div className="mb-4 flex items-center justify-between">
         <button
           onClick={prevMonth}
@@ -490,7 +470,6 @@ function CalendarPicker({
         </button>
       </div>
 
-      {/* Day headers */}
       <div className="mb-2 grid grid-cols-7 text-center">
         {DAY_NAMES.map(d => (
           <div
@@ -502,7 +481,6 @@ function CalendarPicker({
         ))}
       </div>
 
-      {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-0.5">
         {cells.map((day, i) => {
           if (!day) return <div key={`e-${i}`} />
@@ -544,10 +522,10 @@ function StepStartDate({
 }) {
   return (
     <>
-      <StepHeader
-        title="When do you want to start?"
-        subtitle="Pick your first delivery day. Fridays are unavailable."
-      />
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">When do you want to start?</h2>
+        <p className="mt-1.5 text-slate-500">Pick your first delivery day. Fridays are unavailable.</p>
+      </div>
       <CalendarPicker value={value} onChange={onChange} />
       {value && (
         <p className="mt-5 text-center text-sm font-medium text-emerald-600">
@@ -558,7 +536,7 @@ function StepStartDate({
   )
 }
 
-// ─── Step 6: Summary ──────────────────────────────────────────────────────────
+// ─── Step 4: Summary ──────────────────────────────────────────────────────────
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
@@ -585,30 +563,25 @@ function StepSummary({
       ? computePrice(selectedTier, selectedPackage, daysPerWeek, durationWeeks)
       : null
 
-  const durationLabel =
-    DURATION_OPTIONS.find(d => d.weeks === durationWeeks)?.label ?? '—'
+  const durationLabel = DURATION_OPTIONS.find(d => d.weeks === durationWeeks)?.label ?? '—'
 
   return (
     <>
-      <StepHeader title="Your order summary" subtitle="Review your selections before checking out." />
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-slate-900 md:text-3xl">Your order summary</h2>
+        <p className="mt-1.5 text-slate-500">Review your selections before checking out.</p>
+      </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="divide-y divide-slate-100">
           <SummaryRow label="Plan" value={selectedPlan?.name_en ?? '—'} />
           <SummaryRow label="Meals" value={selectedPackage?.category_en ?? '—'} />
           <SummaryRow label="Calorie tier" value={selectedTier?.variance_name_en ?? '—'} />
-          <SummaryRow
-            label="Days / week"
-            value={daysPerWeek ? `${daysPerWeek} days` : '—'}
-          />
+          <SummaryRow label="Days / week" value={daysPerWeek ? `${daysPerWeek} days` : '—'} />
           <SummaryRow label="Duration" value={durationLabel} />
-          <SummaryRow
-            label="Start date"
-            value={startDate ? formatDateLong(startDate) : '—'}
-          />
+          <SummaryRow label="Start date" value={startDate ? formatDateLong(startDate) : '—'} />
         </div>
 
-        {/* Price row */}
         <div className="bg-emerald-50 px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
@@ -624,7 +597,6 @@ function StepSummary({
         </div>
       </div>
 
-      {/* CTA */}
       <a
         href={`/store/${vendorSlug}/signup`}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 py-4 text-base font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
@@ -638,7 +610,7 @@ function StepSummary({
   )
 }
 
-// ─── Main wizard component ────────────────────────────────────────────────────
+// ─── Main wizard ──────────────────────────────────────────────────────────────
 
 interface WizardProps {
   vendor: StorefrontVendor
@@ -670,7 +642,6 @@ export default function SubscribeWizard({
     startDate: null,
   })
 
-  // Sync step from URL on first render
   useEffect(() => {
     const s = parseInt(searchParams.get('step') ?? '1', 10)
     if (s >= 1 && s <= TOTAL_STEPS) setStep(s)
@@ -684,35 +655,14 @@ export default function SubscribeWizard({
   }
 
   function selectPlan(plan: StorefrontPlan) {
-    // Reset downstream selections whenever the plan changes
-    setState(s => ({
-      ...s,
-      selectedPlan: plan,
-      selectedPackage: null,
-      selectedTier: null,
-    }))
+    // Changing plan resets package + tier
+    setState(s => ({ ...s, selectedPlan: plan, selectedPackage: null, selectedTier: null }))
   }
 
   function selectPackage(pkg: StorefrontPackage) {
-    // Reset tier whenever the package changes
+    // Changing package resets tier
     setState(s => ({ ...s, selectedPackage: pkg, selectedTier: null }))
   }
-
-  // Derive packages available for the selected plan
-  const availablePackageIds = state.selectedPlan
-    ? new Set(
-        planPackageMap
-          .filter(r => r.plan_id === state.selectedPlan!.id)
-          .map(r => r.package_id),
-      )
-    : new Set<string>()
-
-  const filteredPackages = packages.filter(p => availablePackageIds.has(p.id))
-
-  // Derive tiers for the selected plan
-  const filteredTiers = state.selectedPlan
-    ? tiers.filter(t => t.plan_id === state.selectedPlan!.id)
-    : []
 
   const ready = canProceed(step, state)
   const isLastStep = step === TOTAL_STEPS
@@ -722,34 +672,22 @@ export default function SubscribeWizard({
       <div className="mx-auto max-w-2xl px-4 py-8 md:px-6 md:py-12">
         <ProgressBar step={step} />
 
-        {/* Animated step content — key forces re-mount on step change */}
         <div key={step} className="animate-step-in">
           {step === 1 && (
-            <StepPlan
+            <StepCustomise
               plans={plans}
-              selected={state.selectedPlan}
-              onSelect={selectPlan}
-            />
-          )}
-
-          {step === 2 && (
-            <StepPackage
-              packages={filteredPackages}
-              selected={state.selectedPackage}
-              onSelect={selectPackage}
-            />
-          )}
-
-          {step === 3 && (
-            <StepTier
-              tiers={filteredTiers}
-              selected={state.selectedTier}
-              onSelect={tier => setState(s => ({ ...s, selectedTier: tier }))}
+              packages={packages}
+              tiers={tiers}
+              planPackageMap={planPackageMap}
+              state={state}
+              onSelectPlan={selectPlan}
+              onSelectPackage={selectPackage}
+              onSelectTier={tier => setState(s => ({ ...s, selectedTier: tier }))}
               currency={vendor.currency}
             />
           )}
 
-          {step === 4 && (
+          {step === 2 && (
             <StepDuration
               daysPerWeek={state.daysPerWeek}
               durationWeeks={state.durationWeeks}
@@ -758,20 +696,20 @@ export default function SubscribeWizard({
             />
           )}
 
-          {step === 5 && (
+          {step === 3 && (
             <StepStartDate
               value={state.startDate}
               onChange={date => setState(s => ({ ...s, startDate: date }))}
             />
           )}
 
-          {step === 6 && (
+          {step === 4 && (
             <StepSummary state={state} currency={vendor.currency} vendorSlug={vendorSlug} />
           )}
         </div>
       </div>
 
-      {/* Sticky nav footer — hidden on the summary step (it has its own CTA) */}
+      {/* Sticky nav — hidden on the summary step */}
       {!isLastStep && (
         <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-100 bg-white/95 px-4 py-4 backdrop-blur-sm md:static md:border-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-none">
           <div className="mx-auto flex max-w-2xl items-center gap-3 md:mt-8">
