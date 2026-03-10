@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { ChevronRight, LayoutDashboard, Settings2, LifeBuoy, UserCircle, ChevronDown } from 'lucide-react'
+import { ChevronRight, LayoutDashboard, Settings2, LifeBuoy, UserCircle, ChevronDown, UtensilsCrossed } from 'lucide-react'
 import { useState } from 'react'
 
 interface DashboardSidebarProps {
@@ -22,6 +22,7 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
   const pathname = usePathname()
   const base = `/dashboard/${vendorSlug}`
   const [plansOpen, setPlansOpen] = useState(true)
+  const [menuOpen, setMenuOpen] = useState(true)
 
   return (
     <aside className="flex w-[240px] shrink-0 flex-col border-r border-gray-200 bg-white">
@@ -90,6 +91,51 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
                   </Link>
                 )
               })}
+            </div>
+          )}
+        </div>
+
+        <div className="my-3 h-px bg-gray-100" />
+
+        {/* Menu Builder — expandable */}
+        <div>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+              pathname.includes('/menu')
+                ? 'bg-gray-100 font-medium text-gray-900'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+          >
+            <UtensilsCrossed className="h-[18px] w-[18px] text-gray-500" />
+            Menu Builder
+            <ChevronRight
+              className={`ml-auto h-4 w-4 text-gray-300 transition-transform duration-200 ${menuOpen ? 'rotate-90' : ''}`}
+            />
+          </button>
+
+          {menuOpen && (
+            <div className="mt-0.5 space-y-0.5 pl-[42px]">
+              <Link
+                href={`${base}/menu/import`}
+                className={`block rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
+                  pathname === `${base}/menu/import`
+                    ? 'font-medium text-gray-900'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                Import Recipe
+              </Link>
+              <Link
+                href={`${base}/menu/items`}
+                className={`block rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
+                  pathname === `${base}/menu/items`
+                    ? 'font-medium text-gray-900'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                All Items
+              </Link>
             </div>
           )}
         </div>

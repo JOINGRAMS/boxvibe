@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       accounts: {
@@ -664,34 +639,46 @@ export type Database = {
       }
       ingredients: {
         Row: {
+          calories_per_100g: number | null
+          carbs_per_100g: number | null
           cost_per_unit: number | null
           created_at: string
+          fat_per_100g: number | null
           id: string
           is_active: boolean
           name_ar: string
           name_en: string
+          protein_per_100g: number | null
           unit: string
           updated_at: string
           vendor_id: string
         }
         Insert: {
+          calories_per_100g?: number | null
+          carbs_per_100g?: number | null
           cost_per_unit?: number | null
           created_at?: string
+          fat_per_100g?: number | null
           id?: string
           is_active?: boolean
           name_ar: string
           name_en: string
+          protein_per_100g?: number | null
           unit: string
           updated_at?: string
           vendor_id: string
         }
         Update: {
+          calories_per_100g?: number | null
+          carbs_per_100g?: number | null
           cost_per_unit?: number | null
           created_at?: string
+          fat_per_100g?: number | null
           id?: string
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          protein_per_100g?: number | null
           unit?: string
           updated_at?: string
           vendor_id?: string
@@ -1067,47 +1054,219 @@ export type Database = {
           },
         ]
       }
-      items: {
+      item_version_ingredients: {
+        Row: {
+          calories: number | null
+          carbs_g: number | null
+          component_ingredient_id: string
+          created_at: string
+          fat_g: number | null
+          id: string
+          item_version_id: string
+          protein_g: number | null
+          quantity_cooked: number | null
+          quantity_raw_scaled: number
+        }
+        Insert: {
+          calories?: number | null
+          carbs_g?: number | null
+          component_ingredient_id: string
+          created_at?: string
+          fat_g?: number | null
+          id?: string
+          item_version_id: string
+          protein_g?: number | null
+          quantity_cooked?: number | null
+          quantity_raw_scaled: number
+        }
+        Update: {
+          calories?: number | null
+          carbs_g?: number | null
+          component_ingredient_id?: string
+          created_at?: string
+          fat_g?: number | null
+          id?: string
+          item_version_id?: string
+          protein_g?: number | null
+          quantity_cooked?: number | null
+          quantity_raw_scaled?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_version_ingredients_component_ingredient_id_fkey"
+            columns: ["component_ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "component_ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_version_ingredients_item_version_id_fkey"
+            columns: ["item_version_id"]
+            isOneToOne: false
+            referencedRelation: "item_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      item_versions: {
         Row: {
           created_at: string
-          deleted_at: string | null
-          description: string | null
           id: string
-          image_url: string | null
           is_active: boolean
-          name_ar: string
-          name_en: string
-          slug: string
+          item_id: string
+          plan_id: string
+          portion_size_id: string
+          total_calories: number
+          total_carbs_g: number
+          total_fat_g: number
+          total_protein_g: number
           updated_at: string
           vendor_id: string
         }
         Insert: {
           created_at?: string
+          id?: string
+          is_active?: boolean
+          item_id: string
+          plan_id: string
+          portion_size_id: string
+          total_calories: number
+          total_carbs_g: number
+          total_fat_g: number
+          total_protein_g: number
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          item_id?: string
+          plan_id?: string
+          portion_size_id?: string
+          total_calories?: number
+          total_carbs_g?: number
+          total_fat_g?: number
+          total_protein_g?: number
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_versions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_versions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_versions_portion_size_id_fkey"
+            columns: ["portion_size_id"]
+            isOneToOne: false
+            referencedRelation: "portion_sizes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_versions_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          ai_reviewed: boolean
+          base_calories: number | null
+          base_carbs_g: number | null
+          base_fat_g: number | null
+          base_protein_g: number | null
+          cooking_method: string | null
+          created_at: string
+          cuisine_tag: string | null
+          deleted_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          meal_type_id: string | null
+          name_ar: string
+          name_en: string
+          prep_method: string | null
+          recipe_import_id: string | null
+          slug: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          ai_reviewed?: boolean
+          base_calories?: number | null
+          base_carbs_g?: number | null
+          base_fat_g?: number | null
+          base_protein_g?: number | null
+          cooking_method?: string | null
+          created_at?: string
+          cuisine_tag?: string | null
           deleted_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
+          meal_type_id?: string | null
           name_ar: string
           name_en: string
+          prep_method?: string | null
+          recipe_import_id?: string | null
           slug: string
           updated_at: string
           vendor_id: string
         }
         Update: {
+          ai_reviewed?: boolean
+          base_calories?: number | null
+          base_carbs_g?: number | null
+          base_fat_g?: number | null
+          base_protein_g?: number | null
+          cooking_method?: string | null
           created_at?: string
+          cuisine_tag?: string | null
           deleted_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
+          meal_type_id?: string | null
           name_ar?: string
           name_en?: string
+          prep_method?: string | null
+          recipe_import_id?: string | null
           slug?: string
           updated_at?: string
           vendor_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "items_meal_type_id_fkey"
+            columns: ["meal_type_id"]
+            isOneToOne: false
+            referencedRelation: "meal_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_recipe_import_id_fkey"
+            columns: ["recipe_import_id"]
+            isOneToOne: false
+            referencedRelation: "recipe_imports"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "items_vendor_id_vendors_id_fk"
             columns: ["vendor_id"]
@@ -1892,6 +2051,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "portions_vendor_id_vendors_id_fk"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_imports: {
+        Row: {
+          ai_extracted_data: Json | null
+          ai_raw_response: Json | null
+          created_at: string
+          error_message: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          original_filename: string
+          status: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          ai_extracted_data?: Json | null
+          ai_raw_response?: Json | null
+          created_at?: string
+          error_message?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          original_filename: string
+          status?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          ai_extracted_data?: Json | null
+          ai_raw_response?: Json | null
+          created_at?: string
+          error_message?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          original_filename?: string
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_imports_vendor_id_fkey"
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
@@ -3189,9 +3398,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       delivery_status: [
