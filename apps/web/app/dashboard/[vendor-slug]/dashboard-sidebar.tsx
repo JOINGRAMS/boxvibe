@@ -15,6 +15,7 @@ interface DashboardSidebarProps {
 const plansSetupItems = [
   { label: 'Pricing & Portions', href: 'pricing-portions' },
   { label: 'Plans', href: 'plans' },
+  { label: 'Calorie Tiers', href: 'calorie-tiers' },
 ]
 
 export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: DashboardSidebarProps) {

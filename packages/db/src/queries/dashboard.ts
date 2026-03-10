@@ -418,3 +418,98 @@ export async function deletePlan(planId: string): Promise<void> {
     .eq('id', planId)
   if (error) throw error
 }
+
+// ─── Calorie Tier Queries ───────────────────────────────────────────────────
+
+export type CalorieTier = {
+  id: string
+  vendor_id: string
+  name_en: string
+  name_ar: string
+  sort_order: number
+  is_active: boolean
+  meals: CalorieTierMeal[]
+}
+
+export type CalorieTierMeal = {
+  id: string
+  calorie_tier_id: string
+  meal_type_id: string
+  portion_size_id: string
+}
+
+export async function getCalorieTiers(vendorId: string): Promise<CalorieTier[]> {
+  const supabase = createSupabaseAdminClient()
+
+  const { data: tiers, error: tierError } = await supabase
+    .from('calorie_tiers')
+    .select('id, vendor_id, name_en, name_ar, sort_order, is_active')
+    .eq('vendor_id', vendorId)
+    .order('sort_order')
+
+  if (tierError) throw tierError
+  if (!tiers || tiers.length === 0) return []
+
+  const tierIds = tiers.map(t => t.id)
+
+  const { data: tierMeals, error: mealError } = await supabase
+    .from('calorie_tier_meals')
+    .select('id, calorie_tier_id, meal_type_id, portion_size_id')
+    .in('calorie_tier_id', tierIds)
+
+  if (mealError) throw mealError
+
+  return tiers.map(t => ({
+    ...t,
+    meals: (tierMeals ?? []).filter(m => m.calorie_tier_id === t.id),
+  }))
+}
+
+export async function saveCalorieTiers(
+  vendorId: string,
+  tiers: Array<{
+    id?: string
+    name_en: string
+    name_ar: string
+    sort_order: number
+    meals: Array<{ meal_type_id: string; portion_size_id: string }>
+  }>
+): Promise<void> {
+  const supabase = createSupabaseAdminClient()
+
+  // Delete all existing tiers for this vendor (cascade deletes tier_meals)
+  await supabase
+    .from('calorie_tiers')
+    .delete()
+    .eq('vendor_id', vendorId)
+
+  // Insert new tiers
+  for (const tier of tiers) {
+    const { data: newTier, error: tierError } = await supabase
+      .from('calorie_tiers')
+      .insert({
+        vendor_id: vendorId,
+        name_en: tier.name_en,
+        name_ar: tier.name_ar,
+        sort_order: tier.sort_order,
+        updated_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single()
+
+    if (tierError) throw tierError
+
+    if (tier.meals.length > 0) {
+      const { error: mealError } = await supabase
+        .from('calorie_tier_meals')
+        .insert(
+          tier.meals.map(m => ({
+            calorie_tier_id: newTier.id,
+            meal_type_id: m.meal_type_id,
+            portion_size_id: m.portion_size_id,
+          }))
+        )
+      if (mealError) throw mealError
+    }
+  }
+}

@@ -44,6 +44,8 @@ export {
   updatePlanPriceAdjustment,
   togglePlanActive,
   deletePlan,
+  getCalorieTiers,
+  saveCalorieTiers,
 } from './queries/dashboard'
 
 export type {
@@ -51,4 +53,6 @@ export type {
   DashboardMealType,
   MealTypePortionPrice,
   DashboardPlan,
+  CalorieTier,
+  CalorieTierMeal,
 } from './queries/dashboard'

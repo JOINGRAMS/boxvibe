@@ -185,6 +185,93 @@ export type Database = {
           },
         ]
       }
+      calorie_tier_meals: {
+        Row: {
+          calorie_tier_id: string
+          created_at: string
+          id: string
+          meal_type_id: string
+          portion_size_id: string
+        }
+        Insert: {
+          calorie_tier_id: string
+          created_at?: string
+          id?: string
+          meal_type_id: string
+          portion_size_id: string
+        }
+        Update: {
+          calorie_tier_id?: string
+          created_at?: string
+          id?: string
+          meal_type_id?: string
+          portion_size_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calorie_tier_meals_calorie_tier_id_fkey"
+            columns: ["calorie_tier_id"]
+            isOneToOne: false
+            referencedRelation: "calorie_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calorie_tier_meals_meal_type_id_fkey"
+            columns: ["meal_type_id"]
+            isOneToOne: false
+            referencedRelation: "meal_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calorie_tier_meals_portion_size_id_fkey"
+            columns: ["portion_size_id"]
+            isOneToOne: false
+            referencedRelation: "portion_sizes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calorie_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          sort_order: number
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en: string
+          sort_order?: number
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          sort_order?: number
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calorie_tiers_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       component_ingredients: {
         Row: {
           component_id: string
