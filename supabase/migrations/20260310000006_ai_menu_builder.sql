@@ -1,5 +1,5 @@
 -- ============================================================
--- BoxVibe — AI Menu Builder schema
+-- BoxVibe — AI Meal Builder schema
 -- Adds: recipe_imports, item_versions, item_version_ingredients
 -- Alters: items (add AI/recipe columns), ingredients (add macro columns)
 -- ============================================================
