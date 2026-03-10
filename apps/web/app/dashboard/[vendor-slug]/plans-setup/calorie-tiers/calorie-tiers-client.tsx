@@ -149,7 +149,7 @@ export function CalorieTiersClient({
       const cal = getTierCalories(tier, previewMeals)
       // Show as a range (±10%)
       const margin = Math.round(cal * 0.08)
-      return { min: cal - margin, max: cal + margin }
+      return { min: Math.round((cal - margin) / 50) * 50, max: Math.round((cal + margin) / 50) * 50 }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tiers, previewMeals, portionMap])

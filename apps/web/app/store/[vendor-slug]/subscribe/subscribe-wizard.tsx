@@ -671,7 +671,9 @@ export default function SubscribeWizard({ vendor, plans, mealTypes, tiers, calor
       .filter(m => selectedMealIds.has(m.meal_type_id))
       .reduce((sum, m) => sum + m.calories, 0)
     const margin = Math.round(total * 0.08)
-    return { min: total - margin, max: total + margin, total }
+    const min = Math.round((total - margin) / 50) * 50
+    const max = Math.round((total + margin) / 50) * 50
+    return { min, max, total }
   }
 
   function selectPlan(plan: StorefrontPlan) {
