@@ -3,22 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import {
-  ChevronRight,
-  LayoutDashboard,
-  Users,
-  CreditCard,
-  Percent,
-  BarChart3,
-  CalendarDays,
-  UtensilsCrossed,
-  Settings2,
-  ChefHat,
-  Smartphone,
-  LifeBuoy,
-  UserCircle,
-  ChevronDown,
-} from 'lucide-react'
+import { ChevronRight, LayoutDashboard, Settings2, LifeBuoy, UserCircle, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
 interface DashboardSidebarProps {
@@ -36,25 +21,6 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
   const base = `/dashboard/${vendorSlug}`
   const [plansOpen, setPlansOpen] = useState(true)
 
-  const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: base },
-    { icon: CreditCard, label: 'Subscriptions', href: '#' },
-    { icon: Users, label: 'Customers', href: '#' },
-    { icon: Percent, label: 'Discounts', href: '#' },
-    { icon: BarChart3, label: 'Analytics', href: '#' },
-  ]
-
-  const navItems2 = [
-    { icon: CalendarDays, label: 'Menu Calendar', href: '#' },
-    { icon: UtensilsCrossed, label: 'Meals', href: '#', hasChevron: true },
-  ]
-
-  const navItems3 = [
-    { icon: ChefHat, label: 'Kitchen', href: '#' },
-    { icon: Settings2, label: 'Settings', href: '#' },
-    { icon: Smartphone, label: 'Customer App', href: '#' },
-  ]
-
   return (
     <aside className="flex w-[240px] shrink-0 flex-col border-r border-gray-200 bg-white">
       {/* Vendor branding */}
@@ -71,97 +37,59 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 pb-3">
-        {/* Primary nav */}
-        <div className="space-y-0.5">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
-                  isActive
-                    ? 'bg-gray-100 font-medium text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <item.icon className="h-[18px] w-[18px] text-gray-500" />
-                {item.label}
-                {item.label === 'Subscriptions' || item.label === 'Customers' ? (
-                  <ChevronRight className="ml-auto h-4 w-4 text-gray-300" />
-                ) : null}
-              </Link>
-            )
-          })}
-        </div>
+        {/* Dashboard */}
+        <Link
+          href={base}
+          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+            pathname === base
+              ? 'bg-gray-100 font-medium text-gray-900'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+          }`}
+        >
+          <LayoutDashboard className="h-[18px] w-[18px] text-gray-500" />
+          Dashboard
+        </Link>
 
-        {/* Divider */}
         <div className="my-3 h-px bg-gray-100" />
 
-        {/* Menu section */}
-        <div className="space-y-0.5">
-          {navItems2.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
-            >
-              <item.icon className="h-[18px] w-[18px] text-gray-500" />
-              {item.label}
-              {item.hasChevron && <ChevronRight className="ml-auto h-4 w-4 text-gray-300" />}
-            </Link>
-          ))}
+        {/* Plans Setup — expandable */}
+        <div>
+          <button
+            onClick={() => setPlansOpen(!plansOpen)}
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
+              pathname.includes('/plans-setup')
+                ? 'bg-gray-100 font-medium text-gray-900'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+          >
+            <Settings2 className="h-[18px] w-[18px] text-gray-500" />
+            Plans setup
+            <ChevronRight
+              className={`ml-auto h-4 w-4 text-gray-300 transition-transform duration-200 ${plansOpen ? 'rotate-90' : ''}`}
+            />
+          </button>
 
-          {/* Plans Setup — expandable */}
-          <div>
-            <button
-              onClick={() => setPlansOpen(!plansOpen)}
-              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] transition-colors ${
-                pathname.includes('/plans-setup')
-                  ? 'bg-gray-100 font-medium text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
-              <Settings2 className="h-[18px] w-[18px] text-gray-500" />
-              Plans setup
-              <ChevronRight
-                className={`ml-auto h-4 w-4 text-gray-300 transition-transform duration-200 ${plansOpen ? 'rotate-90' : ''}`}
-              />
-            </button>
-
-            {plansOpen && (
-              <div className="mt-0.5 space-y-0.5 pl-[42px]">
-                {plansSetupItems.map((item) => {
-                  const href = `${base}/plans-setup/${item.href}`
-                  const isActive = pathname === href
-                  return (
-                    <Link
-                      key={item.href}
-                      href={href}
-                      className={`block rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
-                        isActive
-                          ? 'font-medium text-gray-900'
-                          : 'text-gray-500 hover:text-gray-900'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {navItems3.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
-            >
-              <item.icon className="h-[18px] w-[18px] text-gray-500" />
-              {item.label}
-            </Link>
-          ))}
+          {plansOpen && (
+            <div className="mt-0.5 space-y-0.5 pl-[42px]">
+              {plansSetupItems.map((item) => {
+                const href = `${base}/plans-setup/${item.href}`
+                const isActive = pathname === href
+                return (
+                  <Link
+                    key={item.href}
+                    href={href}
+                    className={`block rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
+                      isActive
+                        ? 'font-medium text-gray-900'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
+          )}
         </div>
       </nav>
 
