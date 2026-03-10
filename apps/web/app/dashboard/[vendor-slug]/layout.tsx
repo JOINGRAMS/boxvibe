@@ -16,13 +16,13 @@ export default async function DashboardLayout({ children, params }: DashboardLay
   const displayName = vendor.brand_name ?? vendor.name_en
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-[#f8f8f8]">
       {/* Sidebar */}
       <DashboardSidebar vendorSlug={vendorSlug} displayName={displayName} logoUrl={vendor.logo_image_url} />
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mx-auto max-w-[840px] px-8 py-8">
           {children}
         </div>
       </main>

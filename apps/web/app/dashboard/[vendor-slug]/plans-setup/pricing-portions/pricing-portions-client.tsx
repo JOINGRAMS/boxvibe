@@ -2,9 +2,7 @@
 
 import { useState } from 'react'
 import type { PortionSize, DashboardMealType } from '@boxvibe/db'
-import { Pencil, GripVertical, ChevronDown, ChevronUp, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Pencil, GripVertical, ChevronDown, ChevronUp, Plus, ArrowUpDown } from 'lucide-react'
 import { EditPortionsDialog } from './edit-portions-dialog'
 import { MealTypeDialog } from './meal-type-dialog'
 import { DeleteMealTypeDialog } from './delete-meal-type-dialog'
@@ -42,7 +40,7 @@ export function PricingPortionsClient({
   const [reorderMode, setReorderMode] = useState(false)
   const [reorderedTypes, setReorderedTypes] = useState<DashboardMealType[]>([])
 
-  // Expanded meal types (accordion)
+  // Expanded meal types
   const [expandedMealTypes, setExpandedMealTypes] = useState<Set<string>>(new Set())
 
   const hasPortionSizes = portionSizes.length > 0
@@ -56,7 +54,7 @@ export function PricingPortionsClient({
     })
   }
 
-  // ─── Portion size handlers ──────────────────────────────────────────
+  // ─── Handlers ────────────────────────────────────────────────────────
 
   const handleSavePortions = async (
     portions: Array<{
@@ -73,14 +71,9 @@ export function PricingPortionsClient({
       .map((p, i) => ({ ...p, sort_order: i }))
 
     const result = await savePortionSizes(vendorId, vendorSlug, sorted)
-    if (result.success) {
-      // Refetch by reloading page data
-      window.location.reload()
-    }
+    if (result.success) window.location.reload()
     return result
   }
-
-  // ─── Meal type handlers ─────────────────────────────────────────────
 
   const handleCreateMealType = async (data: {
     label_en: string
@@ -108,8 +101,6 @@ export function PricingPortionsClient({
     const result = await deleteMealTypeAction(deletingMealType.id, vendorSlug)
     if (result.success) window.location.reload()
   }
-
-  // ─── Reorder handlers ──────────────────────────────────────────────
 
   const startReorder = () => {
     setReorderedTypes([...mealTypes])
@@ -144,7 +135,6 @@ export function PricingPortionsClient({
     setReorderedTypes([])
   }
 
-  // Helper to find portion price for a meal type
   const getPortionPrice = (mealType: DashboardMealType, portionSizeId: string) => {
     return mealType.portions.find(p => p.portion_size_id === portionSizeId)?.base_price
   }
@@ -152,193 +142,211 @@ export function PricingPortionsClient({
   const displayMealTypes = reorderMode ? reorderedTypes : mealTypes
 
   return (
-    <div className="mt-8 space-y-8">
+    <div className="mt-8 space-y-6">
       {/* ─── Section 1: Portion Sizes & Calories ──────────────────────── */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">
-                Portion sizes and calories
-              </h2>
-              <p className="mt-0.5 text-sm text-gray-500">
-                Portion sizes dictate how many calories a meal has
-              </p>
-            </div>
-            {hasPortionSizes && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setPortionsDialogOpen(true)}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
+      <section className="rounded-xl border border-gray-200 bg-white">
+        <div className="flex items-start justify-between px-6 pt-6">
+          <div>
+            <h2 className="text-[15px] font-semibold text-gray-900">
+              Portion sizes and calories
+            </h2>
+            <p className="mt-0.5 text-[13px] text-gray-400">
+              Portion sizes dictate how many calories a meal has
+            </p>
           </div>
+          {hasPortionSizes && (
+            <button
+              onClick={() => setPortionsDialogOpen(true)}
+              className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
+        <div className="px-6 pb-6">
           {hasPortionSizes ? (
             <div className="mt-4 flex flex-wrap gap-2">
               {portionSizes.map(ps => (
-                <div
+                <span
                   key={ps.id}
-                  className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-sm text-gray-700"
+                  className="inline-flex items-center rounded-full border border-gray-200 px-4 py-1.5 text-[13px] text-gray-600"
                 >
                   {ps.name_en} · {ps.calories} kcal
-                </div>
+                </span>
               ))}
             </div>
           ) : (
-            <div className="mt-6">
-              <p className="mb-3 text-sm text-gray-400">
-                <span className="font-medium text-gray-600">Step 1</span>
-                <br />
+            <div className="mt-8 mb-2">
+              <div className="flex items-baseline gap-2">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Step 1</span>
+              </div>
+              <h3 className="mt-1 text-[14px] font-medium text-gray-700">
                 Add portion sizes and their calories
+              </h3>
+              <p className="mt-0.5 text-[13px] text-gray-400">
+                Portion sizes dictate how many calories a meal has
               </p>
-              <Button
+              <button
                 onClick={() => setPortionsDialogOpen(true)}
-                className="bg-emerald-700 text-white hover:bg-emerald-800"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#2d5a3d] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#234a31]"
               >
-                <Plus className="mr-1.5 h-4 w-4" />
+                <Plus className="h-4 w-4" />
                 Add portions
-              </Button>
+              </button>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {/* ─── Section 2: Meal Types & Base Pricing ─────────────────────── */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">
-                {hasPortionSizes ? 'Meal types & base pricing' : 'Add meal types and their base prices'}
-              </h2>
-              <p className="mt-0.5 text-sm text-gray-500">
-                {hasPortionSizes
-                  ? 'Add meal types and choose the available portion sizes and the pricing for each'
-                  : 'Meal types like breakfast, lunch, dinner...'}
-              </p>
-            </div>
-            {mealTypes.length > 0 && !reorderMode && (
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={startReorder}>
-                  Re-order types
-                </Button>
-              </div>
-            )}
-            {reorderMode && (
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={cancelReorder}>
-                  Discard
-                </Button>
-                <Button size="sm" className="bg-emerald-700 text-white hover:bg-emerald-800" onClick={saveReorder}>
-                  Save changes
-                </Button>
-              </div>
-            )}
+      <section className="rounded-xl border border-gray-200 bg-white">
+        <div className="flex items-start justify-between px-6 pt-6">
+          <div>
+            <h2 className="text-[15px] font-semibold text-gray-900">
+              {hasPortionSizes && mealTypes.length > 0
+                ? 'Meal types & base pricing'
+                : 'Add meal types and their base prices'}
+            </h2>
+            <p className="mt-0.5 text-[13px] text-gray-400">
+              {hasPortionSizes && mealTypes.length > 0
+                ? 'Add meal types and choose the available portion sizes and the pricing for each'
+                : 'Meal types like breakfast, lunch, dinner...'}
+            </p>
           </div>
-
+          {mealTypes.length > 0 && !reorderMode && (
+            <button
+              onClick={startReorder}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-[12px] font-medium text-gray-500 transition-colors hover:bg-gray-50"
+            >
+              <ArrowUpDown className="h-3.5 w-3.5" />
+              Re-order types
+            </button>
+          )}
           {reorderMode && (
-            <div className="mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={cancelReorder}
+                className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-gray-500 transition-colors hover:bg-gray-50"
+              >
+                Discard
+              </button>
+              <button
+                onClick={saveReorder}
+                className="rounded-lg bg-[#2d5a3d] px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-[#234a31]"
+              >
+                Save changes
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 pb-6">
+          {reorderMode && (
+            <div className="mt-4 rounded-lg bg-amber-50 px-4 py-2.5 text-[13px] text-amber-700">
               Click and drag on the handles next to each item to change its position
             </div>
           )}
 
           {/* Meal type list */}
-          {displayMealTypes.length > 0 ? (
-            <div className="mt-4 divide-y divide-gray-100 rounded-lg border border-gray-200">
+          {displayMealTypes.length > 0 && (
+            <div className="mt-5 overflow-hidden rounded-lg border border-gray-200">
               {displayMealTypes.map((mt, index) => {
                 const isExpanded = expandedMealTypes.has(mt.id) && !reorderMode
+                const isLast = index === displayMealTypes.length - 1
                 return (
-                  <div key={mt.id}>
-                    <div className="flex items-center gap-3 px-4 py-3">
+                  <div key={mt.id} className={!isLast ? 'border-b border-gray-100' : ''}>
+                    {/* Row header */}
+                    <div className="flex items-center px-4 py-3">
                       {reorderMode && (
-                        <div className="flex flex-col gap-0.5">
-                          <button
-                            onClick={() => moveUp(index)}
-                            disabled={index === 0}
-                            className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                          >
-                            <ChevronUp className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => moveDown(index)}
-                            disabled={index === displayMealTypes.length - 1}
-                            className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                          </button>
+                        <div className="mr-2 flex items-center gap-1">
+                          <GripVertical className="h-4 w-4 text-gray-300" />
+                          <div className="flex flex-col">
+                            <button
+                              onClick={() => moveUp(index)}
+                              disabled={index === 0}
+                              className="text-gray-400 hover:text-gray-600 disabled:opacity-20"
+                            >
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => moveDown(index)}
+                              disabled={index === displayMealTypes.length - 1}
+                              className="text-gray-400 hover:text-gray-600 disabled:opacity-20"
+                            >
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       )}
 
-                      {reorderMode && (
-                        <GripVertical className="h-4 w-4 text-gray-300" />
-                      )}
+                      {/* Dollar icon */}
+                      <div className="mr-3 flex h-7 w-7 items-center justify-center rounded-md bg-gray-100 text-gray-400">
+                        <span className="text-[11px] font-bold">$</span>
+                      </div>
 
                       <button
                         onClick={() => !reorderMode && toggleExpanded(mt.id)}
-                        className="flex flex-1 items-center text-left"
+                        className="flex-1 text-left"
                         disabled={reorderMode}
                       >
-                        <span className="text-sm font-medium text-gray-900">{mt.label_en}</span>
+                        <span className="text-[14px] font-medium text-gray-900">{mt.label_en}</span>
                       </button>
 
                       {!reorderMode && (
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
+                        <div className="flex items-center gap-0.5">
+                          <button
                             onClick={(e) => {
                               e.stopPropagation()
                               setEditingMealType(mt)
                               setMealTypeDialogOpen(true)
                             }}
+                            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
                           >
                             <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
+                          </button>
+                          <button
                             onClick={() => toggleExpanded(mt.id)}
+                            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
                           >
                             {isExpanded ? (
                               <ChevronUp className="h-4 w-4" />
                             ) : (
                               <ChevronDown className="h-4 w-4" />
                             )}
-                          </Button>
+                          </button>
                         </div>
                       )}
                     </div>
 
-                    {/* Expanded portion pricing table */}
+                    {/* Expanded pricing table */}
                     {isExpanded && (
-                      <div className="border-t border-gray-100 bg-gray-50/50 px-4 py-3">
-                        <table className="w-full text-sm">
+                      <div className="border-t border-gray-100 bg-gray-50/70 px-5 py-4">
+                        <table className="w-full">
                           <thead>
-                            <tr className="text-left text-gray-500">
-                              <th className="pb-2 font-medium">Portion size</th>
-                              <th className="pb-2 font-medium">Calories</th>
-                              <th className="pb-2 text-right font-medium">Base price ($)</th>
+                            <tr className="text-[12px] font-medium text-gray-400">
+                              <th className="pb-3 text-left">Portion size</th>
+                              <th className="pb-3 text-left">Calories</th>
+                              <th className="pb-3 text-right">Base price ($)</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-100">
-                            {portionSizes.map(ps => {
+                          <tbody>
+                            {portionSizes.map((ps, psIdx) => {
                               const price = getPortionPrice(mt, ps.id)
                               return (
-                                <tr key={ps.id}>
-                                  <td className="py-2 text-gray-700">{ps.name_en}</td>
-                                  <td className="py-2 text-gray-500">{ps.calories}</td>
-                                  <td className="py-2 text-right">
+                                <tr
+                                  key={ps.id}
+                                  className={psIdx < portionSizes.length - 1 ? 'border-b border-gray-100' : ''}
+                                >
+                                  <td className="py-2.5 text-[13px] text-gray-700">{ps.name_en}</td>
+                                  <td className="py-2.5 text-[13px] text-gray-400">{ps.calories}</td>
+                                  <td className="py-2.5 text-right">
                                     {price !== undefined ? (
-                                      <span className="inline-flex rounded-md bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                                      <span className="inline-flex rounded-md bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-700">
                                         {Number(price).toFixed(1)}$
                                       </span>
                                     ) : (
-                                      <span className="text-gray-400">—</span>
+                                      <span className="text-[13px] text-gray-300">—</span>
                                     )}
                                   </td>
                                 </tr>
@@ -352,39 +360,53 @@ export function PricingPortionsClient({
                 )
               })}
             </div>
-          ) : null}
+          )}
 
-          {/* Add meal type button */}
-          {!reorderMode && (
-            <div className="mt-4">
-              {!hasPortionSizes ? (
-                <Button disabled className="bg-emerald-700 text-white opacity-50">
-                  <Plus className="mr-1.5 h-4 w-4" />
-                  Add Meal type
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => {
-                    setEditingMealType(null)
-                    setMealTypeDialogOpen(true)
-                  }}
-                  className="bg-emerald-700 text-white hover:bg-emerald-800"
-                >
-                  <Plus className="mr-1.5 h-4 w-4" />
-                  Add Meal type
-                </Button>
-              )}
+          {/* Empty state for meal types */}
+          {!hasPortionSizes && mealTypes.length === 0 && (
+            <div className="mt-8 mb-2">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Step 2</span>
+              <h3 className="mt-1 text-[14px] font-medium text-gray-700">
+                Add meal types and their base prices
+              </h3>
+              <p className="mt-0.5 text-[13px] text-gray-400">
+                Meal types like breakfast, lunch, dinner...
+              </p>
             </div>
           )}
 
-          {mealTypes.length > 0 && (
-            <p className="mt-4 text-xs text-gray-400">
+          {/* Add meal type button */}
+          {!reorderMode && (
+            <div className="mt-5">
+              <button
+                onClick={() => {
+                  setEditingMealType(null)
+                  setMealTypeDialogOpen(true)
+                }}
+                disabled={!hasPortionSizes}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors ${
+                  hasPortionSizes
+                    ? 'bg-[#2d5a3d] text-white hover:bg-[#234a31]'
+                    : 'cursor-not-allowed bg-gray-100 text-gray-400'
+                }`}
+              >
+                <Plus className="h-4 w-4" />
+                Add Meal type
+              </button>
+            </div>
+          )}
+
+          {/* Footer note */}
+          {mealTypes.length > 0 && !reorderMode && (
+            <p className="mt-5 text-[12px] text-gray-400">
               You can adjust the final pricing for each meal type depending on the diet in{' '}
-              <span className="font-medium text-emerald-600">Diets</span>
+              <span className="font-medium text-emerald-600 underline decoration-emerald-200 underline-offset-2">
+                Diets
+              </span>
             </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {/* ─── Dialogs ──────────────────────────────────────────────────── */}
       <EditPortionsDialog
