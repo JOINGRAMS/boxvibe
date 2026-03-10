@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       accounts: {
@@ -1644,41 +1669,56 @@ export type Database = {
       }
       plans: {
         Row: {
+          carb_pct: number
           cover_image: string | null
           created_at: string
           desc_ar: string | null
           desc_en: string | null
+          fat_pct: number
           id: string
           is_active: boolean
           name_ar: string
           name_en: string
+          price_adjustment: number
+          protein_pct: number
           slug: string | null
+          sort_order: number
           updated_at: string
           vendor_id: string
         }
         Insert: {
+          carb_pct?: number
           cover_image?: string | null
           created_at?: string
           desc_ar?: string | null
           desc_en?: string | null
+          fat_pct?: number
           id?: string
           is_active?: boolean
           name_ar: string
           name_en: string
+          price_adjustment?: number
+          protein_pct?: number
           slug?: string | null
+          sort_order?: number
           updated_at: string
           vendor_id: string
         }
         Update: {
+          carb_pct?: number
           cover_image?: string | null
           created_at?: string
           desc_ar?: string | null
           desc_en?: string | null
+          fat_pct?: number
           id?: string
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          price_adjustment?: number
+          protein_pct?: number
           slug?: string | null
+          sort_order?: number
           updated_at?: string
           vendor_id?: string
         }
@@ -3062,6 +3102,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       delivery_status: [

@@ -2,6 +2,23 @@ import { createSupabaseAdminClient } from '../client'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export type DashboardPlan = {
+  id: string
+  vendor_id: string
+  name_en: string
+  name_ar: string
+  desc_en: string | null
+  desc_ar: string | null
+  cover_image: string | null
+  slug: string | null
+  is_active: boolean
+  protein_pct: number
+  carb_pct: number
+  fat_pct: number
+  price_adjustment: number
+  sort_order: number
+}
+
 export type PortionSize = {
   id: string
   vendor_id: string
@@ -261,4 +278,143 @@ export async function reorderMealTypes(
       .eq('vendor_id', vendorId)
     if (error) throw error
   }
+}
+
+// ─── Plan Queries ───────────────────────────────────────────────────────────
+
+const PLAN_SELECT = 'id, vendor_id, name_en, name_ar, desc_en, desc_ar, cover_image, slug, is_active, protein_pct, carb_pct, fat_pct, price_adjustment, sort_order' as const
+
+export async function getDashboardPlans(vendorId: string): Promise<DashboardPlan[]> {
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from('plans')
+    .select(PLAN_SELECT)
+    .eq('vendor_id', vendorId)
+    .order('sort_order')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function createPlan(
+  vendorId: string,
+  data: {
+    name_en: string
+    desc_en: string
+    cover_image: string | null
+    protein_pct: number
+    carb_pct: number
+    fat_pct: number
+    price_adjustment: number
+  }
+): Promise<string> {
+  const supabase = createSupabaseAdminClient()
+
+  // Get next sort_order
+  const { data: existing } = await supabase
+    .from('plans')
+    .select('sort_order')
+    .eq('vendor_id', vendorId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const nextOrder = existing && existing.length > 0 ? existing[0].sort_order + 1 : 0
+
+  // Generate slug from name
+  const slug = data.name_en.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+
+  const { data: plan, error } = await supabase
+    .from('plans')
+    .insert({
+      vendor_id: vendorId,
+      name_en: data.name_en,
+      name_ar: '',
+      desc_en: data.desc_en || null,
+      desc_ar: null,
+      cover_image: data.cover_image,
+      slug,
+      protein_pct: data.protein_pct,
+      carb_pct: data.carb_pct,
+      fat_pct: data.fat_pct,
+      price_adjustment: data.price_adjustment,
+      sort_order: nextOrder,
+      updated_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single()
+
+  if (error) throw error
+  return plan.id
+}
+
+export async function updatePlanDetails(
+  planId: string,
+  data: {
+    name_en: string
+    desc_en: string
+    cover_image: string | null
+  }
+): Promise<void> {
+  const supabase = createSupabaseAdminClient()
+  const slug = data.name_en.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+  const { error } = await supabase
+    .from('plans')
+    .update({
+      name_en: data.name_en,
+      desc_en: data.desc_en || null,
+      cover_image: data.cover_image,
+      slug,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', planId)
+  if (error) throw error
+}
+
+export async function updatePlanMacros(
+  planId: string,
+  data: { protein_pct: number; carb_pct: number; fat_pct: number }
+): Promise<void> {
+  const supabase = createSupabaseAdminClient()
+  const { error } = await supabase
+    .from('plans')
+    .update({
+      protein_pct: data.protein_pct,
+      carb_pct: data.carb_pct,
+      fat_pct: data.fat_pct,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', planId)
+  if (error) throw error
+}
+
+export async function updatePlanPriceAdjustment(
+  planId: string,
+  priceAdjustment: number
+): Promise<void> {
+  const supabase = createSupabaseAdminClient()
+  const { error } = await supabase
+    .from('plans')
+    .update({
+      price_adjustment: priceAdjustment,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', planId)
+  if (error) throw error
+}
+
+export async function togglePlanActive(planId: string, isActive: boolean): Promise<void> {
+  const supabase = createSupabaseAdminClient()
+  const { error } = await supabase
+    .from('plans')
+    .update({ is_active: isActive, updated_at: new Date().toISOString() })
+    .eq('id', planId)
+  if (error) throw error
+}
+
+export async function deletePlan(planId: string): Promise<void> {
+  const supabase = createSupabaseAdminClient()
+  const { error } = await supabase
+    .from('plans')
+    .delete()
+    .eq('id', planId)
+  if (error) throw error
 }

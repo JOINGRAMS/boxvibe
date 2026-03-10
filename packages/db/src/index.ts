@@ -37,10 +37,18 @@ export {
   updateMealType,
   deleteMealType,
   reorderMealTypes,
+  getDashboardPlans,
+  createPlan,
+  updatePlanDetails,
+  updatePlanMacros,
+  updatePlanPriceAdjustment,
+  togglePlanActive,
+  deletePlan,
 } from './queries/dashboard'
 
 export type {
   PortionSize,
   DashboardMealType,
   MealTypePortionPrice,
+  DashboardPlan,
 } from './queries/dashboard'
