@@ -27,17 +27,16 @@ function generateTempId() {
 
 /**
  * Auto-generate calorie tiers by progressively assigning larger portion sizes.
+ * Only uses portion sizes that are actually assigned to each meal type.
  * Main meals (lunch, dinner) scale up first, then breakfast, then snacks.
  */
 function autoGenerateTiers(
   mealTypes: DashboardMealType[],
   portionSizes: PortionSize[],
+  mealTypePortionsMap: Record<string, PortionSize[]>,
   tierCount: number = 5
 ): TierRow[] {
   if (portionSizes.length === 0 || mealTypes.length === 0) return []
-
-  const sorted = [...portionSizes].sort((a, b) => a.calories - b.calories)
-  const portionCount = sorted.length
 
   // Prioritize main meals for scaling (lunch, dinner first, then breakfast, then snacks)
   const priority = (mt: DashboardMealType) => {
@@ -55,22 +54,24 @@ function autoGenerateTiers(
   for (let tierIdx = 0; tierIdx < tierCount; tierIdx++) {
     const assignments: Record<string, string> = {}
 
-    // For each meal type, pick a portion size based on tier level
-    for (let mtIdx = 0; mtIdx < orderedMealTypes.length; mtIdx++) {
-      const mt = orderedMealTypes[mtIdx]
+    for (const mt of orderedMealTypes) {
+      // Only use portion sizes allowed for this meal type
+      const allowed = mealTypePortionsMap[mt.id] ?? []
+      if (allowed.length === 0) continue
 
+      const count = allowed.length
       // Higher priority meals scale faster
-      // Scale factor: tierIdx spreads across portion sizes, priority shifts the base
-      const priorityBoost = priority(mt) <= 1 ? 0.3 : 0 // main meals get a boost
-      const rawIdx = (tierIdx / Math.max(tierCount - 1, 1)) * (portionCount - 1) + priorityBoost
-      const portionIdx = Math.min(Math.round(rawIdx), portionCount - 1)
+      const priorityBoost = priority(mt) <= 1 ? 0.3 : 0
+      const rawIdx = (tierIdx / Math.max(tierCount - 1, 1)) * (count - 1) + priorityBoost
+      const portionIdx = Math.min(Math.round(rawIdx), count - 1)
 
-      assignments[mt.id] = sorted[portionIdx].id
+      assignments[mt.id] = allowed[portionIdx].id
     }
 
     // Calculate total calories for naming
     const totalCal = orderedMealTypes.reduce((sum, mt) => {
-      const ps = sorted.find(p => p.id === assignments[mt.id])
+      const psId = assignments[mt.id]
+      const ps = portionSizes.find(p => p.id === psId)
       return sum + (ps?.calories ?? 0)
     }, 0)
 
@@ -116,6 +117,16 @@ export function CalorieTiersClient({
     [portionSizes]
   )
 
+  // Map each meal type to its allowed portion sizes (from meal_type_portion_prices)
+  const mealTypePortions = useMemo(() => {
+    const map: Record<string, PortionSize[]> = {}
+    for (const mt of mealTypes) {
+      const allowedIds = new Set(mt.portions.map(p => p.portion_size_id))
+      map[mt.id] = sortedPortions.filter(ps => allowedIds.has(ps.id))
+    }
+    return map
+  }, [mealTypes, sortedPortions])
+
   const hasMealTypes = mealTypes.length > 0
   const hasPortions = portionSizes.length > 0
   const canConfigure = hasMealTypes && hasPortions
@@ -144,7 +155,7 @@ export function CalorieTiersClient({
   }, [tiers, previewMeals, portionMap])
 
   const handleAutoGenerate = () => {
-    const generated = autoGenerateTiers(mealTypes, portionSizes, 5)
+    const generated = autoGenerateTiers(mealTypes, portionSizes, mealTypePortions, 5)
     setTiers(generated)
     setHasChanges(true)
   }
@@ -152,8 +163,9 @@ export function CalorieTiersClient({
   const addTier = () => {
     const assignments: Record<string, string> = {}
     mealTypes.forEach(mt => {
-      if (sortedPortions.length > 0) {
-        assignments[mt.id] = sortedPortions[0].id
+      const allowed = mealTypePortions[mt.id] ?? []
+      if (allowed.length > 0) {
+        assignments[mt.id] = allowed[0].id
       }
     })
     setTiers(prev => [...prev, {
@@ -334,22 +346,29 @@ export function CalorieTiersClient({
                             />
                           </td>
 
-                          {/* Portion size selectors */}
-                          {mealTypes.map(mt => (
-                            <td key={mt.id} className="px-3 py-3">
-                              <select
-                                value={tier.assignments[mt.id] ?? ''}
-                                onChange={e => updateAssignment(tier.tempId, mt.id, e.target.value)}
-                                className="h-8 w-full min-w-[100px] rounded-lg border border-gray-200 bg-white px-2 text-[12px] text-gray-700 outline-none focus:border-gray-400"
-                              >
-                                {sortedPortions.map(ps => (
-                                  <option key={ps.id} value={ps.id}>
-                                    {ps.name_en} ({ps.calories})
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                          ))}
+                          {/* Portion size selectors — only show portions assigned to this meal type */}
+                          {mealTypes.map(mt => {
+                            const allowed = mealTypePortions[mt.id] ?? []
+                            return (
+                              <td key={mt.id} className="px-3 py-3">
+                                {allowed.length > 0 ? (
+                                  <select
+                                    value={tier.assignments[mt.id] ?? ''}
+                                    onChange={e => updateAssignment(tier.tempId, mt.id, e.target.value)}
+                                    className="h-8 w-full min-w-[100px] rounded-lg border border-gray-200 bg-white px-2 text-[12px] text-gray-700 outline-none focus:border-gray-400"
+                                  >
+                                    {allowed.map(ps => (
+                                      <option key={ps.id} value={ps.id}>
+                                        {ps.name_en} ({ps.calories})
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <span className="text-[11px] text-gray-300">No portions</span>
+                                )}
+                              </td>
+                            )
+                          })}
 
                           {/* Total */}
                           <td className="px-3 py-3 text-right">
