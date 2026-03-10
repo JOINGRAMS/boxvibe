@@ -85,7 +85,7 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
-                <item.icon className="h-[18px] w-[18px] text-gray-400" />
+                <item.icon className="h-[18px] w-[18px] text-gray-500" />
                 {item.label}
                 {item.label === 'Subscriptions' || item.label === 'Customers' ? (
                   <ChevronRight className="ml-auto h-4 w-4 text-gray-300" />
@@ -106,7 +106,7 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
               href={item.href}
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
             >
-              <item.icon className="h-[18px] w-[18px] text-gray-400" />
+              <item.icon className="h-[18px] w-[18px] text-gray-500" />
               {item.label}
               {item.hasChevron && <ChevronRight className="ml-auto h-4 w-4 text-gray-300" />}
             </Link>
@@ -122,7 +122,7 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
-              <Settings2 className="h-[18px] w-[18px] text-gray-400" />
+              <Settings2 className="h-[18px] w-[18px] text-gray-500" />
               Plans setup
               <ChevronRight
                 className={`ml-auto h-4 w-4 text-gray-300 transition-transform duration-200 ${plansOpen ? 'rotate-90' : ''}`}
@@ -158,7 +158,7 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
               href={item.href}
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
             >
-              <item.icon className="h-[18px] w-[18px] text-gray-400" />
+              <item.icon className="h-[18px] w-[18px] text-gray-500" />
               {item.label}
             </Link>
           ))}
@@ -171,14 +171,14 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
           href="#"
           className="flex items-center gap-3 px-5 py-2.5 text-[13px] text-gray-500 hover:text-gray-700"
         >
-          <LifeBuoy className="h-[18px] w-[18px] text-gray-400" />
+          <LifeBuoy className="h-[18px] w-[18px] text-gray-500" />
           Support
         </Link>
         <Link
           href="#"
           className="flex items-center gap-3 px-5 py-2.5 text-[13px] text-gray-500 hover:text-gray-700"
         >
-          <UserCircle className="h-[18px] w-[18px] text-gray-400" />
+          <UserCircle className="h-[18px] w-[18px] text-gray-500" />
           Account Settings
         </Link>
         <div className="flex items-center gap-3 border-t border-gray-100 px-5 py-3">

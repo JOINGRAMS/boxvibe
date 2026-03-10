@@ -189,7 +189,7 @@ export function PricingPortionsClient({
               </p>
               <button
                 onClick={() => setPortionsDialogOpen(true)}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#2d5a3d] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#234a31]"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-gray-800"
               >
                 <Plus className="h-4 w-4" />
                 Add portions
@@ -233,7 +233,7 @@ export function PricingPortionsClient({
               </button>
               <button
                 onClick={saveReorder}
-                className="rounded-lg bg-[#2d5a3d] px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-[#234a31]"
+                className="rounded-lg bg-gray-900 px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-gray-800"
               >
                 Save changes
               </button>
@@ -386,7 +386,7 @@ export function PricingPortionsClient({
                 disabled={!hasPortionSizes}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors ${
                   hasPortionSizes
-                    ? 'bg-[#2d5a3d] text-white hover:bg-[#234a31]'
+                    ? 'bg-gray-900 text-white hover:bg-gray-800'
                     : 'cursor-not-allowed bg-gray-100 text-gray-400'
                 }`}
               >
