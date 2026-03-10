@@ -56,10 +56,8 @@ export function MealTypeDialog({
       } else {
         setName('')
         setNameAr('')
-        setSelectedPortionIds(new Set(portionSizes.map(p => p.id)))
-        const defaultPrices: Record<string, string> = {}
-        portionSizes.forEach(p => { defaultPrices[p.id] = '0.00' })
-        setPrices(defaultPrices)
+        setSelectedPortionIds(new Set())
+        setPrices({})
       }
       setStep(1)
       setError(null)

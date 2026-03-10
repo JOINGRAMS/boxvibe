@@ -214,3 +214,61 @@ export const getMealTypesForVendor = cache(async (vendorId: string): Promise<Sto
     .order('display_order')
   return data ?? []
 })
+
+// ─── Calorie tiers (dynamic, based on portion sizes per meal type) ───────────
+
+export type StorefrontCalorieTierMeal = {
+  meal_type_id: string
+  calories: number
+}
+
+export type StorefrontCalorieTier = {
+  id: string
+  name_en: string
+  name_ar: string
+  sort_order: number
+  meals: StorefrontCalorieTierMeal[]
+}
+
+/** Calorie tiers for a vendor with per-meal-type calorie values (from portion sizes). */
+export const getCalorieTiersForVendor = cache(async (vendorId: string): Promise<StorefrontCalorieTier[]> => {
+  const supabase = createSupabaseAdminClient()
+
+  // Fetch active tiers
+  const { data: tierRows } = await supabase
+    .from('calorie_tiers')
+    .select('id, name_en, name_ar, sort_order')
+    .eq('vendor_id', vendorId)
+    .eq('is_active', true)
+    .order('sort_order')
+
+  if (!tierRows || tierRows.length === 0) return []
+
+  // Fetch all meal assignments with portion size calories
+  const tierIds = tierRows.map(t => t.id)
+  const { data: mealRows } = await supabase
+    .from('calorie_tier_meals')
+    .select('calorie_tier_id, meal_type_id, portion_size_id')
+    .in('calorie_tier_id', tierIds)
+
+  // Fetch all portion sizes for calorie lookup
+  const portionIds = [...new Set((mealRows ?? []).map(m => m.portion_size_id))]
+  const { data: portionRows } = portionIds.length > 0
+    ? await supabase.from('portion_sizes').select('id, calories').in('id', portionIds)
+    : { data: [] }
+
+  const portionCalories = Object.fromEntries((portionRows ?? []).map(p => [p.id, p.calories]))
+
+  return tierRows.map(tier => ({
+    id: tier.id,
+    name_en: tier.name_en,
+    name_ar: tier.name_ar,
+    sort_order: tier.sort_order,
+    meals: (mealRows ?? [])
+      .filter(m => m.calorie_tier_id === tier.id)
+      .map(m => ({
+        meal_type_id: m.meal_type_id,
+        calories: portionCalories[m.portion_size_id] ?? 0,
+      })),
+  }))
+})

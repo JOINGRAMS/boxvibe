@@ -135,9 +135,6 @@ export function PricingPortionsClient({
     setReorderedTypes([])
   }
 
-  const getPortionPrice = (mealType: DashboardMealType, portionSizeId: string) => {
-    return mealType.portions.find(p => p.portion_size_id === portionSizeId)?.base_price
-  }
 
   const displayMealTypes = reorderMode ? reorderedTypes : mealTypes
 
@@ -331,23 +328,20 @@ export function PricingPortionsClient({
                             </tr>
                           </thead>
                           <tbody>
-                            {portionSizes.map((ps, psIdx) => {
-                              const price = getPortionPrice(mt, ps.id)
+                            {mt.portions.map((pp, ppIdx) => {
+                              const ps = portionSizes.find(p => p.id === pp.portion_size_id)
+                              if (!ps) return null
                               return (
                                 <tr
                                   key={ps.id}
-                                  className={psIdx < portionSizes.length - 1 ? 'border-b border-gray-100' : ''}
+                                  className={ppIdx < mt.portions.length - 1 ? 'border-b border-gray-100' : ''}
                                 >
                                   <td className="py-2.5 text-[13px] text-gray-700">{ps.name_en}</td>
                                   <td className="py-2.5 text-[13px] text-gray-400">{ps.calories}</td>
                                   <td className="py-2.5 text-right">
-                                    {price !== undefined ? (
-                                      <span className="inline-flex rounded-md bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-700">
-                                        {Number(price).toFixed(1)}$
-                                      </span>
-                                    ) : (
-                                      <span className="text-[13px] text-gray-300">—</span>
-                                    )}
+                                    <span className="inline-flex rounded-md bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-700">
+                                      {Number(pp.base_price).toFixed(1)}$
+                                    </span>
                                   </td>
                                 </tr>
                               )

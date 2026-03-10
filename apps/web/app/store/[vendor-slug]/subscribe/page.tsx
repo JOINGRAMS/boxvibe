@@ -6,6 +6,7 @@ import {
   getPlansByVendorId,
   getMealTypesForVendor,
   getAllTiersForVendor,
+  getCalorieTiersForVendor,
 } from '@boxvibe/db'
 import SubscribeWizard from './subscribe-wizard'
 
@@ -46,10 +47,11 @@ export default async function SubscribePage({ params }: SubscribePageProps) {
   const vendor = await getVendorBySlug(vendorSlug)
   if (!vendor) notFound()
 
-  const [plans, mealTypes, tiers] = await Promise.all([
+  const [plans, mealTypes, tiers, calorieTiers] = await Promise.all([
     getPlansByVendorId(vendor.id),
     getMealTypesForVendor(vendor.id),
     getAllTiersForVendor(vendor.id),
+    getCalorieTiersForVendor(vendor.id),
   ])
 
   return (
@@ -59,6 +61,7 @@ export default async function SubscribePage({ params }: SubscribePageProps) {
         plans={plans}
         mealTypes={mealTypes}
         tiers={tiers}
+        calorieTiers={calorieTiers}
         vendorSlug={vendorSlug}
       />
     </Suspense>

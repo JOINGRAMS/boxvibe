@@ -8,6 +8,7 @@ import type {
   StorefrontPlan,
   StorefrontTier,
   StorefrontVendor,
+  StorefrontCalorieTier,
 } from '@boxvibe/db'
 
 // ─── Meal type metadata ───────────────────────────────────────────────────────
@@ -131,6 +132,7 @@ interface WizardState {
   selectedPlan:         StorefrontPlan | null
   selectedMealTypeKeys: string[]          // additive: any combo, price = sum of daily rates
   selectedTier:         StorefrontTier | null
+  selectedCalorieTier:  StorefrontCalorieTier | null
   daysPerWeek:          number | null
   durationWeeks:        number | null
   startDate:            string | null
@@ -471,11 +473,18 @@ function SummarySidebar({
   vendorSlug:  string
   isComplete:  boolean
 }) {
-  const { selectedPlan, selectedMealTypeKeys, selectedTier, daysPerWeek, durationWeeks, startDate } = state
+  const { selectedPlan, selectedMealTypeKeys, selectedTier, selectedCalorieTier, daysPerWeek, durationWeeks, startDate } = state
 
   const dailyRate   = mealTypes.filter(m => selectedMealTypeKeys.includes(m.key)).reduce((s, m) => s + m.price_per_day, 0)
   const totalPrice  = daysPerWeek && durationWeeks ? computePrice(dailyRate, daysPerWeek, durationWeeks) : null
   const durationLabel = DURATION_OPTIONS.find(d => d.weeks === durationWeeks)?.label ?? null
+
+  // Calorie tier label for summary
+  const tierLabel = selectedCalorieTier
+    ? selectedCalorieTier.name_en
+    : selectedTier
+      ? selectedTier.variance_name_en
+      : null
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
@@ -489,7 +498,7 @@ function SummarySidebar({
             <span className="mt-0.5 text-2xl">{getPlanEmoji(selectedPlan.name_en)}</span>
             <div>
               <p className="font-semibold text-slate-900">{selectedPlan.name_en}</p>
-              {selectedTier && <p className="text-sm text-slate-500">{selectedTier.variance_name_en}</p>}
+              {tierLabel && <p className="text-sm text-slate-500">{tierLabel}</p>}
               {selectedMealTypeKeys.length > 0 && (
                 <p className="text-sm text-slate-500">
                   {mealTypes.filter(m => selectedMealTypeKeys.includes(m.key)).map(m => m.label_en).join(' + ')}
@@ -635,18 +644,35 @@ function CalendarPicker({ value, onChange }: { value: string | null; onChange: (
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
 interface WizardProps {
-  vendor:     StorefrontVendor
-  plans:      StorefrontPlan[]
-  mealTypes:  StorefrontMealType[]
-  tiers:      StorefrontTier[]
-  vendorSlug: string
+  vendor:       StorefrontVendor
+  plans:        StorefrontPlan[]
+  mealTypes:    StorefrontMealType[]
+  tiers:        StorefrontTier[]
+  calorieTiers: StorefrontCalorieTier[]
+  vendorSlug:   string
 }
 
-export default function SubscribeWizard({ vendor, plans, mealTypes, tiers, vendorSlug }: WizardProps) {
+export default function SubscribeWizard({ vendor, plans, mealTypes, tiers, calorieTiers, vendorSlug }: WizardProps) {
   const [state, setState] = useState<WizardState>({
-    selectedPlan: null, selectedMealTypeKeys: [], selectedTier: null,
+    selectedPlan: null, selectedMealTypeKeys: [], selectedTier: null, selectedCalorieTier: null,
     daysPerWeek: null, durationWeeks: null, startDate: null, targetTdee: null,
   })
+
+  // Build a map from meal_type key → id for calorie tier lookups
+  const mealTypeKeyToId = Object.fromEntries(mealTypes.map(m => [m.key, m.id]))
+
+  // Use new calorie tiers if available, otherwise fall back to old plan_package_tiers
+  const hasCalorieTiers = calorieTiers.length > 0
+
+  // Compute dynamic calorie range for a calorie tier given selected meal keys
+  function getTierCalorieRange(tier: StorefrontCalorieTier, selectedKeys: string[]): { min: number; max: number; total: number } {
+    const selectedMealIds = new Set(selectedKeys.map(k => mealTypeKeyToId[k]).filter(Boolean))
+    const total = tier.meals
+      .filter(m => selectedMealIds.has(m.meal_type_id))
+      .reduce((sum, m) => sum + m.calories, 0)
+    const margin = Math.round(total * 0.08)
+    return { min: total - margin, max: total + margin, total }
+  }
 
   function selectPlan(plan: StorefrontPlan) {
     setState(s => ({ ...s, selectedPlan: plan, selectedTier: null }))
@@ -658,7 +684,8 @@ export default function SubscribeWizard({ vendor, plans, mealTypes, tiers, vendo
       selectedMealTypeKeys: s.selectedMealTypeKeys.includes(key)
         ? s.selectedMealTypeKeys.filter(k => k !== key)
         : [...s.selectedMealTypeKeys, key],
-      selectedTier: null,  // recalculate tier when meals change
+      selectedTier: null,
+      selectedCalorieTier: null,  // recalculate tier when meals change
     }))
   }
 
@@ -689,10 +716,12 @@ export default function SubscribeWizard({ vendor, plans, mealTypes, tiers, vendo
     .filter(m => state.selectedMealTypeKeys.includes(m.key))
     .reduce((s, m) => s + m.price_per_day, 0)
 
+  const hasTierSelection = hasCalorieTiers ? state.selectedCalorieTier !== null : state.selectedTier !== null
+
   const isComplete =
     state.selectedPlan !== null &&
     state.selectedMealTypeKeys.length > 0 &&
-    state.selectedTier !== null &&
+    hasTierSelection &&
     state.daysPerWeek !== null &&
     state.durationWeeks !== null &&
     state.startDate !== null
@@ -813,44 +842,74 @@ export default function SubscribeWizard({ vendor, plans, mealTypes, tiers, vendo
             </Section>
           )}
 
-          {/* 3. Calorie tier */}
+          {/* 3. Calorie tier — dynamic when calorie_tiers exist, otherwise fallback to old plan_package_tiers */}
           {state.selectedMealTypeKeys.length > 0 && state.selectedPlan && (
             <Section num={3} title="How many calories per day?" subtitle="Pick a tier that matches your goal." animate>
-              {filteredTiers.length === 0 ? (
-                <p className="text-sm text-slate-400">No calorie tiers configured for this plan yet.</p>
+              {hasCalorieTiers ? (
+                calorieTiers.length === 0 ? (
+                  <p className="text-sm text-slate-400">No calorie tiers configured yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {calorieTiers.map(tier => {
+                      const range = getTierCalorieRange(tier, state.selectedMealTypeKeys)
+                      const isSelected = state.selectedCalorieTier?.id === tier.id
+                      if (range.total === 0) return null // skip tiers with no overlap
+                      return (
+                        <button
+                          key={tier.id}
+                          onClick={() => setState(s => ({ ...s, selectedCalorieTier: tier }))}
+                          className={cn(
+                            'relative flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-medium transition-all duration-200',
+                            isSelected
+                              ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
+                          )}
+                        >
+                          <span>{range.min} - {range.max} kcal</span>
+                          {isSelected && <Check className="h-3.5 w-3.5" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
               ) : (
-                <div className="flex flex-wrap gap-2">
-                  {filteredTiers.map(tier => {
-                    const isSelected = state.selectedTier?.id === tier.id
-                    const isAiRecommended = aiRecommendedTier?.id === tier.id
-                    return (
-                      <button
-                        key={tier.id}
-                        onClick={() => setState(s => ({ ...s, selectedTier: tier }))}
-                        className={cn(
-                          'relative flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-medium transition-all duration-200',
-                          isSelected
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
-                        )}
-                      >
-                        <span>{tier.variance_name_en}</span>
-                        {isSelected && <Check className="h-3.5 w-3.5" />}
-                        {isAiRecommended && !isSelected && (
-                          <span className="absolute -top-2 -right-1 flex items-center gap-0.5 rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                            <Sparkles className="h-2.5 w-2.5" /> AI
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
+                // Fallback: old static tiers from plan_package_tiers
+                filteredTiers.length === 0 ? (
+                  <p className="text-sm text-slate-400">No calorie tiers configured for this plan yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {filteredTiers.map(tier => {
+                      const isSelected = state.selectedTier?.id === tier.id
+                      const isAiRecommended = aiRecommendedTier?.id === tier.id
+                      return (
+                        <button
+                          key={tier.id}
+                          onClick={() => setState(s => ({ ...s, selectedTier: tier }))}
+                          className={cn(
+                            'relative flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-medium transition-all duration-200',
+                            isSelected
+                              ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
+                          )}
+                        >
+                          <span>{tier.variance_name_en}</span>
+                          {isSelected && <Check className="h-3.5 w-3.5" />}
+                          {isAiRecommended && !isSelected && (
+                            <span className="absolute -top-2 -right-1 flex items-center gap-0.5 rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                              <Sparkles className="h-2.5 w-2.5" /> AI
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
               )}
             </Section>
           )}
 
           {/* 4. Delivery days */}
-          {state.selectedTier && (
+          {hasTierSelection && (
             <Section num={4} title="Preferred delivery days" animate>
               <div className="grid grid-cols-2 gap-3">
                 {DAYS_OPTIONS.map(opt => {

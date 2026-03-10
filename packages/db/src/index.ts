@@ -18,6 +18,7 @@ export {
   getAllTiersForVendor,
   getPlanPackagesForVendor,
   getMealTypesForVendor,
+  getCalorieTiersForVendor,
 } from './queries/storefront'
 
 export type {
@@ -27,6 +28,8 @@ export type {
   StorefrontTier,
   PlanPackageLink,
   StorefrontMealType,
+  StorefrontCalorieTier,
+  StorefrontCalorieTierMeal,
 } from './queries/storefront'
 
 export {
