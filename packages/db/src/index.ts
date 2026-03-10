@@ -28,3 +28,19 @@ export type {
   PlanPackageLink,
   StorefrontMealType,
 } from './queries/storefront'
+
+export {
+  getPortionSizes,
+  getMealTypesWithPortions,
+  upsertPortionSizes,
+  createMealType,
+  updateMealType,
+  deleteMealType,
+  reorderMealTypes,
+} from './queries/dashboard'
+
+export type {
+  PortionSize,
+  DashboardMealType,
+  MealTypePortionPrice,
+} from './queries/dashboard'

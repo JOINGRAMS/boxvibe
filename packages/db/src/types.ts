@@ -1047,6 +1047,48 @@ export type Database = {
           },
         ]
       }
+      meal_type_portion_prices: {
+        Row: {
+          base_price: number
+          created_at: string
+          id: string
+          meal_type_id: string
+          portion_size_id: string
+          updated_at: string
+        }
+        Insert: {
+          base_price?: number
+          created_at?: string
+          id?: string
+          meal_type_id: string
+          portion_size_id: string
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number
+          created_at?: string
+          id?: string
+          meal_type_id?: string
+          portion_size_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_type_portion_prices_meal_type_id_fkey"
+            columns: ["meal_type_id"]
+            isOneToOne: false
+            referencedRelation: "meal_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_type_portion_prices_portion_size_id_fkey"
+            columns: ["portion_size_id"]
+            isOneToOne: false
+            referencedRelation: "portion_sizes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_types: {
         Row: {
           created_at: string | null
@@ -1641,6 +1683,53 @@ export type Database = {
           vendor_id?: string
         }
         Relationships: []
+      }
+      portion_sizes: {
+        Row: {
+          calories: number
+          created_at: string
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          sort_order: number
+          symbol: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          calories: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en: string
+          sort_order?: number
+          symbol?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          calories?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          sort_order?: number
+          symbol?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portion_sizes_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       portions: {
         Row: {
