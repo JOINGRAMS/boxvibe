@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'All Items — Menu Builder' }
+export const metadata: Metadata = { title: 'All Items — Meal Builder' }
 
 export default function MenuItemsPage() {
   return (

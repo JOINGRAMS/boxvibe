@@ -97,7 +97,7 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
 
         <div className="my-3 h-px bg-gray-100" />
 
-        {/* Menu Builder — expandable */}
+        {/* Meal Builder — expandable */}
         <div>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -108,7 +108,7 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
             }`}
           >
             <UtensilsCrossed className="h-[18px] w-[18px] text-gray-500" />
-            Menu Builder
+            Meal Builder
             <ChevronRight
               className={`ml-auto h-4 w-4 text-gray-300 transition-transform duration-200 ${menuOpen ? 'rotate-90' : ''}`}
             />

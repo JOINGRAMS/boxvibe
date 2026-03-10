@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { getVendorBySlug, getDashboardPlans, getPortionSizes } from '@boxvibe/db'
 import { RecipeImportClient } from './recipe-import-client'
 
-export const metadata: Metadata = { title: 'Import Recipe — Menu Builder' }
+export const metadata: Metadata = { title: 'Import Recipe — Meal Builder' }
 
 interface Props {
   params: Promise<{ 'vendor-slug': string }>
