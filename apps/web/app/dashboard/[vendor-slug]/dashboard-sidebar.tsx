@@ -28,7 +28,7 @@ export function DashboardSidebar({ vendorSlug, displayName, logoUrl }: Dashboard
     <aside className="flex w-60 flex-col border-r border-gray-200 bg-white">
       {/* Vendor branding */}
       <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-4">
-        {logoUrl ? (
+        {logoUrl && (logoUrl.startsWith('/') || logoUrl.startsWith('http')) ? (
           <Image src={logoUrl} alt={displayName} width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
         ) : (
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
