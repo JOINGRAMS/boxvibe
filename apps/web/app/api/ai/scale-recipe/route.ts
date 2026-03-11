@@ -150,10 +150,18 @@ Generate one scaled version for EVERY combination of plan × portion_size. That 
 
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 8192,
+      max_tokens: 16384,
       messages: [{ role: 'user', content: userMessage }],
       system: SYSTEM_PROMPT,
     })
+
+    // Check if the response was truncated
+    if (message.stop_reason === 'max_tokens') {
+      return NextResponse.json(
+        { error: 'AI response was truncated — too many plan×portion combinations. Try fewer plans or portions.' },
+        { status: 500 },
+      )
+    }
 
     const textBlock = message.content.find(block => block.type === 'text')
     if (!textBlock || textBlock.type !== 'text') {
@@ -162,7 +170,8 @@ Generate one scaled version for EVERY combination of plan × portion_size. That 
 
     let versions: ScaledVersion[]
     try {
-      versions = JSON.parse(textBlock.text) as ScaledVersion[]
+      const raw = textBlock.text.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim()
+      versions = JSON.parse(raw) as ScaledVersion[]
     } catch {
       return NextResponse.json(
         { error: 'Failed to parse AI response as JSON', raw: textBlock.text },

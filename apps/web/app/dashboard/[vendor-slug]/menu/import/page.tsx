@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getVendorBySlug, getDashboardPlans, getPortionSizes } from '@boxvibe/db'
+import { getVendorBySlug, getDashboardPlans, getPortionSizes, getMealTypesForVendor } from '@boxvibe/db'
 import { RecipeImportClient } from './recipe-import-client'
 
 export const metadata: Metadata = { title: 'Import Recipe — Meal Builder' }
@@ -14,13 +14,14 @@ export default async function RecipeImportPage({ params }: Props) {
   const vendor = await getVendorBySlug(vendorSlug)
   if (!vendor) notFound()
 
-  const [plans, portionSizes] = await Promise.all([
+  const [plans, portionSizes, mealTypes] = await Promise.all([
     getDashboardPlans(vendor.id),
     getPortionSizes(vendor.id),
+    getMealTypesForVendor(vendor.id),
   ])
 
-  // Only pass active plans & portions
-  const activePlans = plans.filter(p => p.is_active)
+  // Only pass active plans with valid macro splits & active portions
+  const activePlans = plans.filter(p => p.is_active && p.protein_pct + p.carb_pct + p.fat_pct === 100)
   const activePortions = portionSizes.filter(p => p.is_active)
 
   return (
@@ -34,6 +35,7 @@ export default async function RecipeImportPage({ params }: Props) {
         vendorSlug={vendorSlug}
         plans={activePlans}
         portionSizes={activePortions}
+        mealTypes={mealTypes}
       />
     </div>
   )

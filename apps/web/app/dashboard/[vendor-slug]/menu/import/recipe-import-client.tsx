@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, Loader2, AlertCircle, CheckCircle2, FileText } from 'lucide-react'
+import { Sparkles, Loader2, AlertCircle, CheckCircle2, FileText, ChefHat } from 'lucide-react'
 import { saveExtractedRecipe, saveScaledVersions } from './actions'
 import { RecipeCard } from './recipe-card'
-import type { DashboardPlan, PortionSize } from '@boxvibe/db'
+import type { DashboardPlan, PortionSize, StorefrontMealType } from '@boxvibe/db'
 
 // ─── Types matching the AI response ────────────────────────────────────────────
 
@@ -66,22 +66,39 @@ interface ScaledVersion {
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
-type Step = 'input' | 'extracting' | 'review' | 'saving' | 'scaling' | 'versions' | 'done'
+type Step = 'input' | 'extracting' | 'review' | 'saving' | 'scaling' | 'versions'
 
 interface Props {
   vendorId: string
   vendorSlug: string
   plans: DashboardPlan[]
   portionSizes: PortionSize[]
+  mealTypes: StorefrontMealType[]
 }
 
-export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
+export function RecipeImportClient({ vendorId, plans, portionSizes, mealTypes }: Props) {
   const [step, setStep] = useState<Step>('input')
   const [recipeText, setRecipeText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [extracted, setExtracted] = useState<ExtractedRecipe | null>(null)
   const [scaledVersions, setScaledVersions] = useState<ScaledVersion[]>([])
   const [selectedVersion, setSelectedVersion] = useState<ScaledVersion | null>(null)
+
+  // User selections on the review screen
+  const [selectedMealTypeIds, setSelectedMealTypeIds] = useState<string[]>([])
+  const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>(() => plans.map(p => p.id))
+  const [selectedPortionIds, setSelectedPortionIds] = useState<string[]>(() => portionSizes.map(p => p.id))
+
+  // Derived: which plans/portions to actually use
+  const activePlans = plans.filter(p => selectedPlanIds.includes(p.id))
+  const activePortions = portionSizes.filter(p => selectedPortionIds.includes(p.id))
+  const totalVersions = activePlans.length * activePortions.length
+
+  // Setup checks
+  const hasPlans = plans.length > 0
+  const hasPortions = portionSizes.length > 0
+  const hasMealTypes = mealTypes.length > 0
+  const setupComplete = hasPlans && hasPortions && hasMealTypes
 
   // ─── Step 1: Extract recipe via AI ────────────────────────────────────────
 
@@ -111,17 +128,22 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
   // ─── Step 2: Save to DB + Scale via AI ────────────────────────────────────
 
   async function handleConfirmAndScale() {
-    if (!extracted) return
+    if (!extracted || selectedMealTypeIds.length === 0) return
+    if (activePlans.length === 0 || activePortions.length === 0) return
     setError(null)
     setStep('saving')
 
     try {
-      // 1. Save the base recipe to DB
-      const { itemId, componentIngredientMap } = await saveExtractedRecipe(vendorId, extracted)
+      // 1. Save the base recipe to DB (with meal_type_id)
+      const { itemId, componentIngredientMap } = await saveExtractedRecipe(
+        vendorId,
+        extracted,
+        selectedMealTypeIds,
+      )
 
       setStep('scaling')
 
-      // 2. Call scale-recipe AI endpoint
+      // 2. Call scale-recipe AI endpoint with only selected plans & portions
       const res = await fetch('/api/ai/scale-recipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,14 +161,14 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
               fat_per_100g: i.fat_per_100g,
             })),
           })),
-          plans: plans.map(p => ({
+          plans: activePlans.map(p => ({
             plan_id: p.id,
             plan_name: p.name_en,
             protein_pct: p.protein_pct,
             carb_pct: p.carb_pct,
             fat_pct: p.fat_pct,
           })),
-          portions: portionSizes.map(ps => ({
+          portions: activePortions.map(ps => ({
             portion_size_id: ps.id,
             portion_name: ps.name_en,
             target_calories: ps.calories,
@@ -176,7 +198,69 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
     setExtracted(null)
     setScaledVersions([])
     setSelectedVersion(null)
+    setSelectedMealTypeIds([])
+    setSelectedPlanIds(plans.map(p => p.id))
+    setSelectedPortionIds(portionSizes.map(p => p.id))
     setError(null)
+  }
+
+  function toggleMealType(mealTypeId: string) {
+    setSelectedMealTypeIds(prev =>
+      prev.includes(mealTypeId) ? prev.filter(id => id !== mealTypeId) : [...prev, mealTypeId],
+    )
+  }
+
+  function togglePlan(planId: string) {
+    setSelectedPlanIds(prev =>
+      prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId],
+    )
+  }
+
+  function togglePortion(portionId: string) {
+    setSelectedPortionIds(prev =>
+      prev.includes(portionId) ? prev.filter(id => id !== portionId) : [...prev, portionId],
+    )
+  }
+
+  // ─── Render: Setup incomplete ─────────────────────────────────────────────
+
+  if (!setupComplete) {
+    return (
+      <div className="mt-8 space-y-4">
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-5">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-amber-800">Vendor setup required before importing recipes</p>
+            <p className="text-sm text-amber-700">
+              The AI Meal Builder needs your vendor&apos;s plans, portion sizes, and meal types configured. Please complete these steps first:
+            </p>
+            <ul className="ml-1 space-y-1 text-sm text-amber-700">
+              <li className="flex items-center gap-2">
+                {hasPlans ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <AlertCircle className="h-4 w-4 text-amber-500" />}
+                <span className={hasPlans ? 'text-emerald-700' : ''}>
+                  Plans with macro splits (protein/carb/fat %) — {hasPlans ? `${plans.length} configured` : 'not set up'}
+                </span>
+              </li>
+              <li className="flex items-center gap-2">
+                {hasPortions ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <AlertCircle className="h-4 w-4 text-amber-500" />}
+                <span className={hasPortions ? 'text-emerald-700' : ''}>
+                  Portion sizes with calorie targets — {hasPortions ? `${portionSizes.length} configured` : 'not set up'}
+                </span>
+              </li>
+              <li className="flex items-center gap-2">
+                {hasMealTypes ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <AlertCircle className="h-4 w-4 text-amber-500" />}
+                <span className={hasMealTypes ? 'text-emerald-700' : ''}>
+                  Meal types (breakfast, lunch, dinner…) — {hasMealTypes ? `${mealTypes.length} configured` : 'not set up'}
+                </span>
+              </li>
+            </ul>
+            <p className="text-xs text-amber-600">
+              Go to Plans Setup in the sidebar to configure these.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // ─── Render: Input step ─────────────────────────────────────────────────────
@@ -221,7 +305,7 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
     const messages: Record<string, { title: string; subtitle: string }> = {
       extracting: { title: 'AI is analyzing your recipe...', subtitle: 'Extracting ingredients, calculating macros, and identifying cuisine' },
       saving: { title: 'Saving recipe to database...', subtitle: 'Creating item, components, and ingredients' },
-      scaling: { title: 'AI is generating portion versions...', subtitle: `Scaling to ${plans.length} plans × ${portionSizes.length} portion sizes = ${plans.length * portionSizes.length} versions` },
+      scaling: { title: 'AI is generating portion versions...', subtitle: `Scaling to ${activePlans.length} plans × ${activePortions.length} portion sizes = ${totalVersions} versions` },
     }
     const msg = messages[step]
     return (
@@ -241,6 +325,8 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
   // ─── Render: Review extracted data ──────────────────────────────────────────
 
   if (step === 'review' && extracted) {
+    const canGenerate = selectedMealTypeIds.length > 0 && activePlans.length > 0 && activePortions.length > 0
+
     return (
       <div className="mt-8 space-y-6">
         {error && <ErrorBanner message={error} />}
@@ -250,6 +336,7 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
           <p className="text-sm font-medium text-emerald-800">Recipe extracted successfully</p>
         </div>
 
+        {/* Recipe summary */}
         <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-4">
           <div className="flex items-start justify-between">
             <div>
@@ -282,6 +369,7 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
           </div>
         </div>
 
+        {/* Ingredients tables */}
         {extracted.components.map((comp, ci) => (
           <div key={ci} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
             <div className="bg-gray-50 px-5 py-3 border-b border-gray-100">
@@ -321,36 +409,119 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
           </div>
         ))}
 
-        {/* Confirm: shows plan/portion info */}
-        {plans.length === 0 || portionSizes.length === 0 ? (
-          <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <AlertCircle className="mt-0.5 h-5 w-5 text-amber-500" />
-            <div>
-              <p className="text-sm font-medium text-amber-800">Setup required</p>
-              <p className="mt-0.5 text-sm text-amber-600">
-                {plans.length === 0 && 'No active plans found. '}
-                {portionSizes.length === 0 && 'No portion sizes configured. '}
-                Please set these up in Plans Setup before generating portions.
-              </p>
-            </div>
+        {/* ─── Meal Type Selection ──────────────────────────────────────── */}
+        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+            <ChefHat className="h-4 w-4" />
+            Assign meal type(s)
+          </div>
+          <p className="text-xs text-gray-400">
+            Select one or more meal types. This determines where the dish appears on the menu.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {mealTypes.map(mt => (
+              <button
+                key={mt.id}
+                onClick={() => toggleMealType(mt.id)}
+                className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
+                  selectedMealTypeIds.includes(mt.id)
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                    : 'border-gray-100 text-gray-600 hover:border-gray-200'
+                }`}
+              >
+                {mt.label_en}
+              </button>
+            ))}
+          </div>
+          {selectedMealTypeIds.length === 0 && (
+            <p className="text-xs text-amber-600">Please select at least one meal type to continue.</p>
+          )}
+        </div>
+
+        {/* ─── Plans Selection ──────────────────────────────────────────── */}
+        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
+          <p className="text-sm font-semibold text-gray-800">Select plans to generate</p>
+          <p className="text-xs text-gray-400">
+            Choose which dietary plans should get scaled versions of this recipe.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {plans.map(p => (
+              <button
+                key={p.id}
+                onClick={() => togglePlan(p.id)}
+                className={`rounded-lg border-2 px-4 py-2 text-sm transition-all ${
+                  selectedPlanIds.includes(p.id)
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-medium'
+                    : 'border-gray-100 text-gray-400 hover:border-gray-200'
+                }`}
+              >
+                {p.name_en}
+                <span className="ml-1.5 text-xs opacity-60">
+                  P{p.protein_pct}/C{p.carb_pct}/F{p.fat_pct}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ─── Portion Sizes Selection ──────────────────────────────────── */}
+        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
+          <p className="text-sm font-semibold text-gray-800">Select portion sizes</p>
+          <p className="text-xs text-gray-400">
+            Choose which portion sizes (calorie targets) to generate.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {portionSizes.map(ps => (
+              <button
+                key={ps.id}
+                onClick={() => togglePortion(ps.id)}
+                className={`rounded-lg border-2 px-4 py-2 text-sm transition-all ${
+                  selectedPortionIds.includes(ps.id)
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-medium'
+                    : 'border-gray-100 text-gray-400 hover:border-gray-200'
+                }`}
+              >
+                {ps.symbol} — {ps.name_en}
+                <span className="ml-1.5 text-xs opacity-60">{ps.calories} kcal</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ─── Generation summary + action ──────────────────────────────── */}
+        {canGenerate ? (
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+            <p className="text-sm text-emerald-800">
+              Will generate <strong>{totalVersions}</strong> versions: {activePlans.length} plan{activePlans.length > 1 ? 's' : ''} × {activePortions.length} portion size{activePortions.length > 1 ? 's' : ''}
+            </p>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleConfirmAndScale}
-              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              Confirm & Generate {plans.length * portionSizes.length} Portions
-            </button>
-            <button
-              onClick={handleReset}
-              className="rounded-xl border border-gray-200 px-5 py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
-            >
-              Start over
-            </button>
+          <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <AlertCircle className="mt-0.5 h-5 w-5 text-amber-500" />
+            <p className="text-sm text-amber-700">
+              {selectedMealTypeIds.length === 0 && 'Select at least one meal type. '}
+              {activePlans.length === 0 && 'Select at least one plan. '}
+              {activePortions.length === 0 && 'Select at least one portion size. '}
+            </p>
           </div>
         )}
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleConfirmAndScale}
+            disabled={!canGenerate}
+            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            Confirm & Generate {totalVersions} Portions
+          </button>
+          <button
+            onClick={handleReset}
+            className="rounded-xl border border-gray-200 px-5 py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+          >
+            Start over
+          </button>
+        </div>
       </div>
     )
   }
@@ -359,7 +530,7 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
 
   if (step === 'versions' && extracted && scaledVersions.length > 0) {
     // Group versions by plan
-    const versionsByPlan = plans.reduce<Record<string, ScaledVersion[]>>((acc, plan) => {
+    const versionsByPlan = activePlans.reduce<Record<string, ScaledVersion[]>>((acc, plan) => {
       acc[plan.id] = scaledVersions.filter(v => v.plan_id === plan.id)
       return acc
     }, {})
@@ -373,13 +544,13 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
               {scaledVersions.length} portion versions generated and saved
             </p>
             <p className="mt-0.5 text-xs text-emerald-600">
-              {extracted.name_en} — {plans.length} plans × {portionSizes.length} sizes
+              {extracted.name_en} — {activePlans.length} plans × {activePortions.length} sizes
             </p>
           </div>
         </div>
 
         {/* Versions grid by plan */}
-        {plans.map(plan => {
+        {activePlans.map(plan => {
           const planVersions = versionsByPlan[plan.id] ?? []
           if (planVersions.length === 0) return null
 
@@ -449,7 +620,9 @@ export function RecipeImportClient({ vendorId, plans, portionSizes }: Props) {
                   name_en: comp.name_en,
                   name_ar: comp.name_ar,
                   ingredients: comp.ingredients.map(origIng => {
-                    const scaled = selectedVersion.ingredients.find(si => si.name_en === origIng.name_en)
+                    const scaled = selectedVersion.ingredients.find(
+                      si => si.name_en.toLowerCase().trim() === origIng.name_en.toLowerCase().trim(),
+                    )
                     return {
                       name_en: origIng.name_en,
                       quantity_raw: scaled?.quantity_raw_scaled ?? origIng.quantity_raw,

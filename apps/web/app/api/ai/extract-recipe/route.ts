@@ -152,10 +152,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No text response from AI' }, { status: 500 })
     }
 
-    // Parse the JSON response
+    // Parse the JSON response (strip markdown fences if present)
     let extracted: ExtractedRecipe
     try {
-      extracted = JSON.parse(textBlock.text) as ExtractedRecipe
+      const raw = textBlock.text.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim()
+      extracted = JSON.parse(raw) as ExtractedRecipe
     } catch {
       return NextResponse.json(
         { error: 'Failed to parse AI response as JSON', raw: textBlock.text },

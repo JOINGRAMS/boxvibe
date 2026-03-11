@@ -63,11 +63,12 @@ interface ScaledVersion {
 export async function saveExtractedRecipe(
   vendorId: string,
   recipe: ExtractedRecipe,
+  mealTypeIds: string[],
 ): Promise<{ itemId: string; componentIngredientMap: Record<string, string> }> {
   const supabase = createSupabaseAdminClient()
   const now = new Date().toISOString()
 
-  // 1. Create the item
+  // 1. Create the item (meal_type_id keeps first selection for backward compat)
   const slug = recipe.name_en
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -81,6 +82,7 @@ export async function saveExtractedRecipe(
       name_ar: recipe.name_ar,
       slug,
       description: recipe.description,
+      meal_type_id: mealTypeIds[0],
       cuisine_tag: recipe.cuisine_tag,
       prep_method: recipe.prep_method,
       cooking_method: recipe.cooking_method,
@@ -96,6 +98,19 @@ export async function saveExtractedRecipe(
     .single()
 
   if (itemError || !item) throw new Error(`Failed to create item: ${itemError?.message}`)
+
+  // 1b. Insert into item_meal_types junction table
+  const { error: junctionError } = await supabase
+    .from('item_meal_types')
+    .insert(
+      mealTypeIds.map(mtId => ({
+        item_id: item.id,
+        meal_type_id: mtId,
+        vendor_id: vendorId,
+      })),
+    )
+
+  if (junctionError) throw new Error(`Failed to create item_meal_types: ${junctionError.message}`)
 
   // Map from "componentIndex-ingredientIndex" → component_ingredient_id (for linking scaled versions)
   const componentIngredientMap: Record<string, string> = {}
@@ -186,8 +201,8 @@ export async function saveExtractedRecipe(
 
       if (ciError || !ci_row) throw new Error(`Failed to create component_ingredient: ${ciError?.message}`)
 
-      // Map by ingredient name (used to match scaled versions later)
-      componentIngredientMap[ing.name_en] = ci_row.id
+      // Map by normalized ingredient name (used to match scaled versions later)
+      componentIngredientMap[ing.name_en.toLowerCase().trim()] = ci_row.id
     }
   }
 
@@ -228,7 +243,7 @@ export async function saveScaledVersions(
 
     // Create item_version_ingredients
     for (const scaledIng of version.ingredients) {
-      const ciId = componentIngredientMap[scaledIng.name_en]
+      const ciId = componentIngredientMap[scaledIng.name_en.toLowerCase().trim()]
       if (!ciId) continue // skip if we can't find the matching component_ingredient
 
       await supabase
