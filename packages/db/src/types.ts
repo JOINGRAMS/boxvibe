@@ -928,6 +928,52 @@ export type Database = {
         }
         Relationships: []
       }
+      item_meal_types: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          meal_type_id: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          meal_type_id: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          meal_type_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_meal_types_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_meal_types_meal_type_id_fkey"
+            columns: ["meal_type_id"]
+            isOneToOne: false
+            referencedRelation: "meal_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_meal_types_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       item_tags: {
         Row: {
           created_at: string
